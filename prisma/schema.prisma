@@ -1,0 +1,514 @@
+// Prisma schema for the clinic system, backed by MongoDB.
+//
+// The models mirror the domain types in lib/types.ts. Status / type / priority
+// fields are stored as plain strings so the exact values the app already uses
+// (e.g. "awaiting-triage") carry over unchanged — no enum translation layer.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// --- Embedded (composite) types ------------------------------------------
+
+type Vitals {
+  weight        String
+  temperature   String
+  bloodPressure String
+}
+
+type Med {
+  id         String
+  medicineId String? // exact Medicine catalog item; null only on legacy prescriptions
+  name       String
+  dosage     String
+  frequency  String
+  duration   String
+  quantity   Int? // units the doctor prescribed; the pharmacy may dispense up to this. null on older prescriptions
+  dispensed  Boolean
+}
+
+// One step of a visit's journey: when the visit entered each status. The
+// first event is reception check-in; the last (status "completed") closes it.
+type StageEvent {
+  status String
+  at     DateTime
+}
+
+// Legacy single-payment shape (visit closed with one lump sum at pharmacy).
+// Kept for old records; new visits use `payments` + `charges` instead.
+type Payment {
+  amount    Float
+  method    String // cash | mpesa | card
+  reference String? // e.g. M-Pesa transaction code
+  paidAt    DateTime
+}
+
+// One payment event on a visit. per-stage visits have several (consult, lab,
+// pharmacy); pay-at-end visits typically have one at pharmacy that covers all
+// outstanding charges. `covers` lists the Charge ids this payment settled.
+type VisitPayment {
+  id        String
+  amount    Float
+  method    String // cash | mpesa | card
+  reference String?
+  paidAt    DateTime
+  covers    String[] // Charge ids settled by this payment
+  takenBy   String? // staff username at time of payment (for audit)
+}
+
+// One billable line on a visit. Added as the patient moves through:
+// consultation fee at consult, one per lab test ordered, one per dispensed med,
+// misc for injections / dressings / bed fees. `paid` is toggled by a
+// VisitPayment; in per-stage mode charges are paid before the next stage, in
+// pay-at-end mode they accumulate until the pharmacy takes one payment.
+type Charge {
+  id          String
+  type        String // consultation | lab | radiology | procedure | pharmacy | misc
+  description String
+  amount      Float
+  paid        Boolean   @default(false)
+  paidAt      DateTime?
+  paymentId   String? // id of the VisitPayment that settled this charge
+  createdAt   DateTime
+}
+
+// One parameter of a lab test's result panel (CBC → WBC/RBC/Hb/PLT, etc.),
+// with the reference range the lab flags against.
+type LabParameter {
+  name    String // e.g. "WBC"
+  unit    String // e.g. "10^9/L"
+  refLow  Float?
+  refHigh Float?
+}
+
+// One measured value the lab entered for a parameter. Stored as string so
+// qualitative results ("positive"/"negative") work alongside numeric ones.
+type LabResult {
+  parameter String
+  value     String
+  flag      String? // low | high | normal
+}
+
+// One line of a pharmacy sale: which catalog medicine, how many, at what price.
+type SaleItem {
+  medicineId String
+  name       String // denormalised so history survives catalog edits
+  quantity   Int
+  unitPrice  Float
+  unitCost   Float  @default(0) // catalog costPrice at checkout, for P&L
+}
+
+// Who bought at the walk-in pharmacy counter, and the outside prescription
+// that authorised any prescription-only medicine in the sale. All optional —
+// an over-the-counter sale needs none of it.
+type WalkInInfo {
+  customerName       String?
+  customerPhone      String?
+  prescriber         String? // doctor who wrote the outside prescription
+  prescriberFacility String? // hospital / clinic it came from
+}
+
+// --- Models --------------------------------------------------------------
+
+// Every staff member (receptionist, nurse, doctor, lab/radiology tech,
+// pharmacist, admin) is a User. Doctors are simply users with role "doctor";
+// the doctor roster reception assigns to is `User where role = doctor`.
+model User {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  username     String   @unique
+  // Where password-reset links are sent. Optional (not every staff member has
+  // one); uniqueness is enforced in the repo because MongoDB unique indexes
+  // treat missing fields as null and would reject a second email-less user.
+  email        String?
+  name         String
+  passwordHash String
+  pinHash      String?
+  role         String // admin | receptionist | nurse | doctor | lab | radiology | pharmacist
+  active       Boolean  @default(true)
+  // The branch this person works at. Null = every branch (admins only; other
+  // staff without one are treated as working at the main branch).
+  branchId     String?  @db.ObjectId
+  createdAt    DateTime @default(now())
+}
+
+// One clinic location: its own reception queue, doctors, lab, pharmacy stock,
+// walk-in counter and tills. Patients are shared — anyone can visit any branch.
+model Branch {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String   @unique
+  code      String   @unique // short uppercase tag, e.g. "MAIN", "NRB01"
+  address   String?
+  phone     String?
+  // Exactly one branch is main: it owns everything recorded before branches
+  // existed, and writes fall back to it when no branch is chosen.
+  isMain    Boolean  @default(false)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// How many units of a catalog medicine one branch holds. The catalog (name,
+// price) is shared; stock is not. Medicine.stock stays the all-branch total.
+// Committed with the inventory writes so a lost response can be retried safely.
+model MedicineImportReceipt {
+  id          String   @id @map("_id")
+  fingerprint String
+  added       Int
+  updated     Int
+  createdAt   DateTime @default(now())
+}
+
+model MedicineStock {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  medicineId String   @db.ObjectId
+  branchId   String   @db.ObjectId
+  quantity   Int      @default(0)
+  updatedAt  DateTime @updatedAt
+
+  @@unique([medicineId, branchId])
+  @@index([branchId])
+}
+
+// The inventory audit trail: one row for every change to stock or to a
+// medicine's price/details — who, what, where, when, and the count after.
+// Written inside the same transaction as the change itself, so nothing can
+// move stock without leaving a row. There is no code path that edits or
+// deletes these rows.
+model InventoryEvent {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  // sale | receive | adjust | write-off | transfer-out | transfer-in |
+  // import | opening | price | edit
+  type         String
+  medicineId   String   @db.ObjectId
+  medicineName String // denormalised so the log reads correctly forever
+  branchId     String?  @db.ObjectId
+  quantity     Int      @default(0) // signed change in units (0 for price/edit)
+  stockAfter   Int? // the branch's count right after the change
+  details      String? // e.g. "Count set 50 → 42", "Price KSh 20 → 15"
+  reference    String? // visit / batch / transfer the change belongs to
+  byName       String?
+  byId         String?  @db.ObjectId
+  // Raised automatically on changes worth a second look (manual decreases,
+  // big corrections, write-offs, price cuts, selling below cost).
+  flagged      Boolean  @default(false)
+  flagReason   String?
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([branchId, createdAt])
+  @@index([medicineId, createdAt])
+  @@index([flagged, createdAt])
+}
+
+// Stock sent from one branch to another. Batches move with their batch number
+// and expiry, earliest-expiring first.
+model StockTransfer {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  medicineId   String   @db.ObjectId
+  fromBranchId String   @db.ObjectId
+  toBranchId   String   @db.ObjectId
+  quantity     Int
+  notes        String?
+  byName       String?
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+// A single-use password-reset link. We store only the SHA-256 of the token;
+// the plaintext token exists solely in the emailed link.
+// The one-time admin sign-up, parked here until the emailed code is entered.
+// Only exists while the system has no accounts; the User is created on verify.
+model AdminSignup {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  username     String
+  email        String   @unique
+  passwordHash String
+  codeHash     String
+  expiresAt    DateTime
+  attempts     Int      @default(0)
+  createdAt    DateTime @default(now())
+}
+
+model PasswordReset {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String    @db.ObjectId
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model Patient {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  mrn            String   @unique
+  nationalId     String   @unique
+  firstName      String
+  lastName       String
+  gender         String
+  age            Int
+  phone          String
+  // The User who onboarded this patient. Receptionists only see their own;
+  // null (pre-existing records) is visible to everyone.
+  registeredById String?  @db.ObjectId
+  createdAt      DateTime @default(now())
+  visits         Visit[]
+}
+
+model Visit {
+  id               String         @id @default(auto()) @map("_id") @db.ObjectId
+  patient          Patient        @relation(fields: [patientId], references: [id])
+  patientId        String         @db.ObjectId
+  vitals           Vitals
+  priority         String?
+  complaint        String         @default("")
+  assignedDoctorId String?        @db.ObjectId // references a User with role "doctor"
+  status           String
+  timeline         StageEvent[] // timestamped status history, check-in → completed
+  // Snapshotted at check-in so a mid-visit billing-mode change on the clinic
+  // settings never retroactively rewrites how this visit is charged.
+  billingMode      String         @default("per-stage") // per-stage | pay-at-end
+  charges          Charge[] // every billable line added during the visit
+  payments         VisitPayment[] // every payment event on the visit
+  payment          Payment? // legacy single-payment (old records only)
+  saleItems        SaleItem[] // what the pharmacy actually sold at checkout
+  // "walk-in" = a counter sale with no clinic journey (it's attached to the
+  // shared walk-in patient record). null = an ordinary clinic visit.
+  kind             String?
+  walkIn           WalkInInfo?
+  // The till session that took the money, for end-of-shift reconciliation.
+  shiftId          String?        @db.ObjectId
+  // The clinic location this visit (or counter sale) happened at.
+  branchId         String?        @db.ObjectId
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  orders           Order[]
+
+  @@index([branchId])
+}
+
+// One Daraja STK push. Created when the pharmacist requests payment; settled
+// by the Daraja callback (when reachable) or by polling the query API.
+model MpesaTransaction {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  checkoutRequestId String   @unique
+  phone             String
+  amount            Float
+  status            String   @default("pending") // pending | success | failed
+  receipt           String? // MpesaReceiptNumber from the callback
+  resultDesc        String?
+  visitId           String?  @db.ObjectId
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+// The pharmacy's stock catalog. The pharmacist searches this at the POS.
+model Medicine {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  strength  String // e.g. "500mg", "20/120"
+  form      String // tablet | capsule | syrup | inhaler | cream | sachet
+  unitPrice Float // selling price at the POS
+  costPrice Float    @default(0) // what the clinic pays the supplier
+  stock     Int      @default(0)
+  // Prescription-only medicine (PPB schedule): the walk-in counter won't sell
+  // it without an outside prescription being recorded.
+  requiresPrescription Boolean?
+  // Scanned at the counter. Not @unique: MongoDB unique indexes treat missing
+  // values as duplicates, which would allow only one medicine without one.
+  barcode      String?
+  // Active ingredient, so "paracetamol" finds Panadol, Hedex and the generic.
+  genericName  String?
+  // Restock trigger for this specific medicine (falls back to a global level).
+  reorderLevel Int?
+  createdAt DateTime @default(now())
+  batches   MedicineBatch[]
+
+  @@index([barcode])
+  @@index([genericName])
+}
+
+// One delivery of a medicine: its batch number, expiry and what's left of it.
+// Sales draw down the earliest-expiring batch first (FEFO) and expired stock
+// is never sold. `Medicine.stock` stays the total the counter sells against.
+model MedicineBatch {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  medicineId  String    @db.ObjectId
+  medicine    Medicine  @relation(fields: [medicineId], references: [id], onDelete: Cascade)
+  branchId    String?   @db.ObjectId // which branch's shelf it sits on
+  batchNumber String?
+  expiryDate  DateTime?
+  quantity    Int       @default(0)
+  costPrice   Float?
+  receivedAt  DateTime  @default(now())
+  receivedBy  String? // staff name at the time of receiving
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([medicineId])
+  @@index([expiryDate])
+}
+
+// One AI inventory analysis: a demand forecast and reorder advice per
+// medicine, plus an audit of payments against sales. Only the newest is
+// shown; older runs are kept so forecasts can later be checked against what
+// actually sold.
+model AiInsight {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  summary      String
+  paymentAudit String?
+  // [{ medicineId, predictedDemandNext30Days, recommendedReorderQuantity,
+  //    stockoutRisk, expiryRisk, confidence, reasoning, snapshot{...} }]
+  predictions  Json
+  // The payment totals the audit was based on, so the numbers can be shown.
+  paymentSnapshot Json?
+  model        String?
+  generatedBy  String?
+  // The branch analysed; null = all branches together.
+  branchId     String?  @db.ObjectId
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+// A cashier's till session at the pharmacy counter: opened with a cash float,
+// closed with a physical count. The difference between the cash the system
+// expected and the cash actually counted is the shortage or overage.
+model Shift {
+  id                  String    @id @default(auto()) @map("_id") @db.ObjectId
+  cashierId           String    @db.ObjectId
+  cashierName         String
+  branchId            String?   @db.ObjectId // the branch whose drawer this is
+  status              String    @default("open") // open | closed | discrepancy
+  openedAt            DateTime  @default(now())
+  closedAt            DateTime?
+  openingCash         Float     @default(0)
+  openingNotes        String?
+  closingCashCounted  Float?
+  closingNotes        String?
+  totalCashSales      Float     @default(0)
+  totalMpesaSales     Float     @default(0)
+  totalCardSales      Float     @default(0)
+  expectedClosingCash Float?
+  cashShortageOverage Float?
+  mpesaVariance       Float?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([cashierId, status])
+}
+
+// A running cost of the clinic (rent, salaries, utilities…) logged by an
+// admin — the expense side of the profit & loss report.
+model Expense {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  description  String
+  category     String // rent | salaries | utilities | supplies | equipment | other
+  amount       Float
+  date         DateTime // the day the expense applies to
+  recordedById String?  @db.ObjectId
+  recordedBy   String? // admin's name at entry time
+  createdAt    DateTime @default(now())
+}
+
+// A daily physical cash count, entered by an admin. The reconciliation page
+// compares it against the cash recorded on that day's visit payments.
+model CashCount {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  date        DateTime @unique // UTC midnight of the counted day
+  counted     Float
+  notes       String?
+  countedById String?  @db.ObjectId
+  countedBy   String? // admin's name at entry time
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// A staff absence request: multi-day leave, or a short "excuse" of at most
+// two hours. Created by any staff member; approved or declined by an admin.
+model ActivityRequest {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String    @db.ObjectId
+  userName    String // denormalised so the admin list survives user edits
+  userRole    String
+  type        String // leave | excuse
+  reason      String
+  startDate   DateTime? // leave: first day away
+  endDate     DateTime? // leave: last day away
+  excuseDate  DateTime? // excuse: which day
+  excuseHours Float? // excuse: duration, capped at 2
+  excuseStart DateTime? // excuse: leaves at
+  excuseEnd   DateTime? // excuse: due back (start + hours) — active again after
+  status      String    @default("pending") // pending | approved | declined
+  decidedById String?   @db.ObjectId
+  decidedBy   String? // admin's name at decision time
+  decidedAt   DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+model Order {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  visit         Visit       @relation(fields: [visitId], references: [id])
+  visitId       String      @db.ObjectId
+  type          String
+  title         String
+  instructions  String?
+  status        String
+  // Which catalog service was ordered — supplies the price and, for labs, the
+  // parameter panel. Prescriptions leave this null.
+  serviceItemId String?     @db.ObjectId
+  // Structured lab results (one entry per parameter). Radiology / procedure
+  // still use free-text `result` below.
+  results       LabResult[]
+  result        String?
+  meds          Med[]
+  // Copied from the visit, so each branch's lab and pharmacy see only their own.
+  branchId      String?     @db.ObjectId
+  createdAt     DateTime    @default(now())
+  // Lets screens fetch only orders that changed since their last refresh.
+  // Optional because orders written before this field existed don't have it.
+  updatedAt     DateTime?   @updatedAt
+  completedAt   DateTime?
+
+  @@index([branchId])
+}
+
+// Singleton clinic-wide settings. Read via `findFirst` and created lazily on
+// first read. `billingMode` decides whether new visits pay stage-by-stage or
+// once at the pharmacy; `consultationFee` is the flat fee charged at the
+// consultation gate (0 to skip).
+model ClinicSettings {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  billingMode     String   @default("per-stage") // per-stage | pay-at-end
+  consultationFee Float    @default(0)
+  // The developer's master switch: while locked, no clinic account can sign
+  // in or work — they see the lock message (maintenance, unpaid subscription…).
+  systemLocked    Boolean?
+  lockMessage     String?
+  updatedAt       DateTime @updatedAt
+  updatedById     String?  @db.ObjectId
+}
+
+// A billable service the clinic offers — lab tests, imaging and procedures all
+// live here. Doctors pick from this catalog when ordering, and the picked item
+// supplies both the price (which becomes a Charge) and, for labs, the parameter
+// panel the technician fills in.
+model ServiceItem {
+  id         String         @id @default(auto()) @map("_id") @db.ObjectId
+  name       String
+  orderType  String // lab | radiology | procedure — which station runs it
+  category   String // haematology | biochemistry | microbiology | serology | urinalysis | imaging | other
+  price      Float
+  // Lab result panel. Radiology and procedures leave this empty and report a
+  // free-text finding instead.
+  parameters LabParameter[]
+  active     Boolean        @default(true)
+  createdAt  DateTime       @default(now())
+}

@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-fraunces);
+}
+
+@theme {
+  /* The clinical palette: Tailwind's teal deepened toward pine, so the
+     brand reads calm and premium rather than neon. */
+  --color-teal-50: #f0f9f7;
+  --color-teal-600: #0d7d72;
+  --color-teal-700: #0b655d;
+  --color-teal-800: #0b4f49;
+  --color-teal-900: #0c403c;
+  --color-teal-950: #042f2b;
+}
+
+/* Project-wide background: soft teal glows over a faint medical-cross
+   pattern (public/images/bg-pattern.svg). Fixed so it stays put while
+   content scrolls over it. */
+body {
+  background:
+    radial-gradient(60rem 40rem at 0% 0%, rgb(13 125 114 / 0.1), transparent 60%) no-repeat fixed,
+    radial-gradient(50rem 36rem at 100% 100%, rgb(37 211 102 / 0.07), transparent 60%) no-repeat fixed,
+    url("/images/bg-pattern.svg") repeat fixed,
+    #f3f8f7;
+  color: #10201d;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+::selection {
+  background: #99f6e4;
+  color: #042f2b;
+}
+
+@media print {
+  @page {
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    min-height: 0;
+    background: #fff;
+  }
+
+  /* A completed pharmacy checkout prints only its receipt, not the shell,
+     queues, or other patient information on screen. */
+  body:has(#payment-receipt) * {
+    visibility: hidden;
+  }
+
+  #payment-receipt,
+  #payment-receipt * {
+    visibility: visible !important;
+  }
+
+  #payment-receipt {
+    display: block !important;
+    position: fixed !important;
+    z-index: 2147483647;
+    inset: 0 !important;
+    width: auto;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: #fff !important;
+    color: #18181b !important;
+  }
+
+  #payment-receipt > div {
+    display: block !important;
+    margin: 0 !important;
+    border: 1px solid #d4d4d8 !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+}
+
+/* Operational screens share a quiet canvas and readable control states. */
+.workspace :where(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid #0d7d72;
+  outline-offset: 3px;
+}
+
+.workspace .font-display {
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

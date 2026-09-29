@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" font-family="system-ui, 'Segoe UI', Arial, sans-serif">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#bfe9e1"/>
+      <stop offset="1" stop-color="#f1faf8"/>
+    </linearGradient>
+    <linearGradient id="road" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d4a877"/>
+      <stop offset="1" stop-color="#b98a5a"/>
+    </linearGradient>
+    <linearGradient id="interior" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f8fdfc"/>
+      <stop offset="1" stop-color="#dff3ef"/>
+    </linearGradient>
+    <filter id="soft" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#042f2b" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <!-- sky & backdrop -->
+  <rect width="1200" height="700" fill="url(#sky)"/>
+  <circle cx="1040" cy="100" r="62" fill="#fde68a" opacity="0.7"/>
+  <path d="M0 330 Q180 250 360 300 T720 280 T1200 290 V560 H0 Z" fill="#99d8cc" opacity="0.45"/>
+  <path d="M0 380 Q240 320 480 360 T960 340 T1200 360 V560 H0 Z" fill="#5eb8a8" opacity="0.35"/>
+
+  <!-- ground -->
+  <rect y="556" width="1200" height="50" fill="#b45f3c"/>
+  <rect y="556" width="1200" height="6" fill="#9a4d2f"/>
+  <rect y="606" width="1200" height="94" fill="url(#road)"/>
+  <g fill="#a8784b" opacity="0.5">
+    <circle cx="90" cy="640" r="3"/><circle cx="260" cy="668" r="2.5"/><circle cx="420" cy="648" r="3"/>
+    <circle cx="610" cy="676" r="2"/><circle cx="780" cy="652" r="3"/><circle cx="940" cy="682" r="2.5"/>
+    <circle cx="1110" cy="646" r="3"/><circle cx="350" cy="690" r="2"/><circle cx="1020" cy="662" r="2"/>
+  </g>
+
+  <!-- building -->
+  <g filter="url(#soft)">
+    <rect x="100" y="132" width="1000" height="48" rx="6" fill="#0f766e"/>
+    <rect x="120" y="180" width="960" height="378" fill="#fbf7ef"/>
+  </g>
+  <rect x="120" y="518" width="960" height="40" fill="#134e4a"/>
+  <rect x="100" y="176" width="1000" height="10" fill="#0d5f59"/>
+
+  <!-- green cross sign -->
+  <g>
+    <rect x="566" y="58" width="68" height="68" rx="10" fill="#ffffff" stroke="#0f766e" stroke-width="4"/>
+    <path d="M590 70 h20 v20 h20 v20 h-20 v20 h-20 v-20 h-20 v-20 h20 Z" fill="#10b981" transform="translate(0 -4) scale(1)"/>
+  </g>
+
+  <!-- main signboard -->
+  <rect x="250" y="200" width="700" height="72" rx="12" fill="#0f766e"/>
+  <rect x="258" y="208" width="684" height="56" rx="8" fill="none" stroke="#5eead4" stroke-width="1.5" opacity="0.6"/>
+  <text x="600" y="249" text-anchor="middle" font-size="40" font-weight="800" letter-spacing="4" fill="#ffffff">AMLA MEDICAL CENTRE</text>
+
+  <!-- awning -->
+  <rect x="430" y="284" width="340" height="16" rx="4" fill="#14b8a6"/>
+  <g fill="#0d9488">
+    <rect x="450" y="284" width="20" height="16"/><rect x="490" y="284" width="20" height="16"/>
+    <rect x="530" y="284" width="20" height="16"/><rect x="570" y="284" width="20" height="16"/>
+    <rect x="610" y="284" width="20" height="16"/><rect x="650" y="284" width="20" height="16"/>
+    <rect x="690" y="284" width="20" height="16"/><rect x="730" y="284" width="20" height="16"/>
+  </g>
+
+  <!-- doorway interior -->
+  <rect x="470" y="300" width="260" height="218" fill="url(#interior)"/>
+  <g fill="#cbd5e1">
+    <rect x="480" y="340" width="240" height="4"/><rect x="480" y="380" width="240" height="4"/>
+    <rect x="480" y="420" width="240" height="4"/>
+  </g>
+  <!-- medicine boxes -->
+  <g>
+    <rect x="486" y="318" width="16" height="22" rx="2" fill="#f97316"/><rect x="506" y="322" width="14" height="18" rx="2" fill="#22c55e"/>
+    <rect x="524" y="316" width="18" height="24" rx="2" fill="#3b82f6"/><rect x="546" y="324" width="14" height="16" rx="2" fill="#eab308"/>
+    <rect x="640" y="318" width="16" height="22" rx="2" fill="#ef4444"/><rect x="660" y="322" width="18" height="18" rx="2" fill="#14b8a6"/>
+    <rect x="682" y="316" width="14" height="24" rx="2" fill="#a855f7"/><rect x="700" y="322" width="16" height="18" rx="2" fill="#f97316"/>
+    <rect x="486" y="358" width="18" height="22" rx="2" fill="#0ea5e9"/><rect x="508" y="362" width="14" height="18" rx="2" fill="#f43f5e"/>
+    <rect x="526" y="356" width="16" height="24" rx="2" fill="#84cc16"/><rect x="662" y="358" width="16" height="22" rx="2" fill="#eab308"/>
+    <rect x="682" y="362" width="18" height="18" rx="2" fill="#3b82f6"/><rect x="704" y="356" width="12" height="24" rx="2" fill="#22c55e"/>
+    <rect x="486" y="398" width="14" height="22" rx="2" fill="#a855f7"/><rect x="504" y="402" width="18" height="18" rx="2" fill="#14b8a6"/>
+    <rect x="684" y="398" width="16" height="22" rx="2" fill="#f97316"/><rect x="704" y="402" width="12" height="18" rx="2" fill="#0ea5e9"/>
+  </g>
+  <!-- pharmacist -->
+  <circle cx="600" cy="392" r="16" fill="#6b3f24"/>
+  <path d="M572 452 Q572 414 600 412 Q628 414 628 452 Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <path d="M594 414 L600 432 L606 414" fill="none" stroke="#14b8a6" stroke-width="3"/>
+  <!-- counter -->
+  <rect x="478" y="450" width="244" height="68" rx="4" fill="#ffffff" stroke="#99f6e4" stroke-width="2"/>
+  <rect x="478" y="450" width="244" height="8" fill="#14b8a6"/>
+  <rect x="650" y="428" width="44" height="26" rx="4" fill="#134e4a"/><rect x="654" y="432" width="36" height="16" rx="2" fill="#5eead4"/>
+
+  <!-- left door -->
+  <polygon points="470,300 402,314 402,512 470,520" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="436" font-size="26" font-weight="800" text-anchor="middle" fill="#16a34a">
+    <tspan x="436" y="352">M</tspan><tspan x="436" y="382" fill="#dc2626" font-size="18">&#8212;</tspan><tspan x="436" y="410">P</tspan><tspan x="436" y="440">E</tspan><tspan x="436" y="470">S</tspan><tspan x="436" y="500">A</tspan>
+  </text>
+  <!-- right door -->
+  <polygon points="730,300 798,314 798,512 730,520" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text font-size="24" font-weight="800" text-anchor="middle" fill="#1d4ed8">
+    <tspan x="764" y="352">C</tspan><tspan x="764" y="382">L</tspan><tspan x="764" y="412">I</tspan><tspan x="764" y="442">N</tspan><tspan x="764" y="472">I</tspan><tspan x="764" y="502">C</tspan>
+  </text>
+
+  <!-- M-PESA panel -->
+  <rect x="150" y="300" width="220" height="140" rx="16" fill="#16a34a"/>
+  <text x="260" y="370" text-anchor="middle" font-size="46" font-weight="900" fill="#ffffff" letter-spacing="1">M-PESA</text>
+  <text x="260" y="404" text-anchor="middle" font-size="17" font-weight="600" fill="#dcfce7">Lipa na M-PESA</text>
+  <rect x="150" y="452" width="220" height="50" rx="12" fill="#ecfeff" stroke="#99f6e4" stroke-width="2"/>
+  <text x="260" y="483" text-anchor="middle" font-size="16" font-weight="700" fill="#0f766e" letter-spacing="1">OPEN 7 DAYS A WEEK</text>
+
+  <!-- services panel -->
+  <rect x="826" y="296" width="230" height="212" rx="14" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
+  <text x="941" y="326" text-anchor="middle" font-size="15" font-weight="800" fill="#dc2626" letter-spacing="0.5">OUTPATIENT SERVICES</text>
+  <g font-size="15" font-weight="600" fill="#134e4a">
+    <text x="846" y="352">• Pharmacy</text>
+    <text x="846" y="373">• Consultation</text>
+    <text x="846" y="394">• Immunization</text>
+    <text x="846" y="415">• Minor surgery</text>
+    <text x="846" y="436">• BP checkup</text>
+    <text x="846" y="457">• Diabetic clinic</text>
+    <text x="846" y="478">• Family planning</text>
+    <text x="846" y="499">• Counselling</text>
+  </g>
+
+  <!-- bench -->
+  <g fill="#92400e">
+    <rect x="170" y="528" width="190" height="12" rx="3"/>
+    <rect x="182" y="540" width="8" height="22"/><rect x="340" y="540" width="8" height="22"/>
+  </g>
+
+  <!-- plants -->
+  <g>
+    <path d="M1100 560 l-40 0 l6 -40 l28 0 Z" fill="#c2410c"/>
+    <ellipse cx="1068" cy="500" rx="12" ry="26" fill="#16a34a" transform="rotate(-20 1068 500)"/>
+    <ellipse cx="1092" cy="500" rx="12" ry="26" fill="#22c55e" transform="rotate(20 1092 500)"/>
+    <ellipse cx="1080" cy="492" rx="11" ry="30" fill="#15803d"/>
+    <path d="M140 560 l-40 0 l6 -40 l28 0 Z" fill="#c2410c" transform="translate(0 0)"/>
+    <ellipse cx="108" cy="500" rx="12" ry="26" fill="#16a34a" transform="rotate(-20 108 500)"/>
+    <ellipse cx="132" cy="500" rx="12" ry="26" fill="#22c55e" transform="rotate(20 132 500)"/>
+    <ellipse cx="120" cy="492" rx="11" ry="30" fill="#15803d"/>
+  </g>
+
+  <!-- customers at the counter (back view) -->
+  <g>
+    <circle cx="556" cy="428" r="15" fill="#2b1a10"/>
+    <path d="M534 548 Q530 470 540 446 Q556 438 572 446 Q582 470 578 548 Z" fill="#ca8a04"/>
+    <rect x="544" y="548" width="8" height="12" fill="#6b3f24"/><rect x="562" y="548" width="8" height="12" fill="#6b3f24"/>
+  </g>
+  <g>
+    <circle cx="646" cy="420" r="16" fill="#3b2415"/>
+    <path d="M620 500 L624 446 Q646 434 668 446 L672 500 Z" fill="#64748b"/>
+    <g fill="#94a3b8" opacity="0.7"><circle cx="636" cy="462" r="5"/><circle cx="656" cy="478" r="6"/><circle cx="644" cy="490" r="4"/></g>
+    <rect x="626" y="500" width="40" height="44" fill="#1e3a8a"/>
+    <rect x="626" y="540" width="16" height="20" rx="2" fill="#111827"/><rect x="650" y="540" width="16" height="20" rx="2" fill="#111827"/>
+  </g>
+</svg>
