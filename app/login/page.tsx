@@ -78,10 +78,10 @@ function LoginForm() {
 
   return (
     <>
-      <h1 className="mb-1 font-display text-xl font-semibold text-teal-950">
+      <h1 className="mb-1 font-display text-xl font-semibold text-teal-950 dark:text-zinc-100">
         Sign in
       </h1>
-      <p className="mb-5 text-sm text-zinc-500">
+      <p className="mb-5 text-sm text-zinc-500 dark:text-zinc-400">
         Enter the username or email and password your administrator gave you.
       </p>
       <form onSubmit={submit} className="flex flex-col gap-4">
@@ -107,7 +107,7 @@ function LoginForm() {
         </Field>
         <a
           href="/forgot-password"
-          className="-mt-2 self-end text-xs font-medium text-teal-700 hover:underline"
+          className="-mt-2 self-end text-xs font-medium text-teal-700 hover:underline dark:text-teal-400"
         >
           Forgot password?
         </a>

@@ -1,9 +1,30 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-fraunces);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: #dc2626;
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
 }
 
 @theme {
@@ -17,6 +38,90 @@
   --color-teal-950: #042f2b;
 }
 
+:root {
+  --background: #f6f7f9;
+  --foreground: #18181b;
+  --card: #ffffff;
+  --card-foreground: #18181b;
+  --primary: #0b655d;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #27272a;
+  --muted: #eeeef1;
+  --muted-foreground: #71717a;
+  --accent: #f0f9f7;
+  --accent-foreground: #0b4f49;
+  --border: #e4e4e7;
+  --input: #d4d4d8;
+  --ring: #0d7d72;
+  --popover: #ffffff;
+  --popover-foreground: #18181b;
+
+  --ink-primary: #10201d;
+  --ink-secondary: #52605c;
+  --ink-muted: #7c8783;
+  --ink-grid: #e7edeb;
+  --ink-axis: #cdd8d5;
+  --ink-surface: #ffffff;
+
+  --seq-teal-0: #eef7f5;
+  --seq-teal-1: #d2ece7;
+  --seq-teal-2: #a9dbd3;
+  --seq-teal-3: #78cabf;
+  --seq-teal-4: #38b3a4;
+  --seq-teal-5: #0d9488;
+  --seq-teal-6: #0b7d72;
+
+  --ord-teal-0: #5cc3b6;
+  --ord-teal-1: #2eae9e;
+  --ord-teal-2: #0d9488;
+  --ord-teal-3: #0b7d72;
+  --ord-teal-4: #0a6660;
+  --ord-teal-5: #08504b;
+}
+
+html.dark {
+  --background: #090f0e;
+  --foreground: #edf5f3;
+  --card: #101c1a;
+  --card-foreground: #edf5f3;
+  --primary: #0d7d72;
+  --primary-foreground: #ffffff;
+  --secondary: #132421;
+  --secondary-foreground: #ccdcd8;
+  --muted: #132421;
+  --muted-foreground: #8aa39e;
+  --accent: #112925;
+  --accent-foreground: #34d399;
+  --border: #182e2a;
+  --input: #1c3631;
+  --ring: #14b8a6;
+  --popover: #101c1a;
+  --popover-foreground: #edf5f3;
+
+  --ink-primary: #edf5f3;
+  --ink-secondary: #94a8a3;
+  --ink-muted: #627772;
+  --ink-grid: #172724;
+  --ink-axis: #263e3a;
+  --ink-surface: #101c1a;
+
+  --seq-teal-0: #0d1b19;
+  --seq-teal-1: #112d28;
+  --seq-teal-2: #14443c;
+  --seq-teal-3: #0e6359;
+  --seq-teal-4: #0d7d72;
+  --seq-teal-5: #14b8a6;
+  --seq-teal-6: #2dd4bf;
+
+  --ord-teal-0: #2dd4bf;
+  --ord-teal-1: #14b8a6;
+  --ord-teal-2: #0d9488;
+  --ord-teal-3: #0d7d72;
+  --ord-teal-4: #0b655d;
+  --ord-teal-5: #08504b;
+}
+
 /* Project-wide background: soft teal glows over a faint medical-cross
    pattern (public/images/bg-pattern.svg). Fixed so it stays put while
    content scrolls over it. */
@@ -28,11 +133,26 @@ body {
     #f3f8f7;
   color: #10201d;
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+html.dark body {
+  background:
+    radial-gradient(60rem 40rem at 0% 0%, rgb(13 125 114 / 0.18), transparent 60%) no-repeat fixed,
+    radial-gradient(50rem 36rem at 100% 100%, rgb(20 184 166 / 0.07), transparent 60%) no-repeat fixed,
+    url("/images/bg-pattern.svg") repeat fixed,
+    #090f0e;
+  color: #e6edea;
 }
 
 ::selection {
   background: #99f6e4;
   color: #042f2b;
+}
+
+html.dark ::selection {
+  background: #0f766e;
+  color: #ffffff;
 }
 
 @media print {
@@ -43,7 +163,8 @@ body {
   html,
   body {
     min-height: 0;
-    background: #fff;
+    background: #fff !important;
+    color: #18181b !important;
   }
 
   /* A completed pharmacy checkout prints only its receipt, not the shell,
@@ -81,8 +202,30 @@ body {
 }
 
 /* Operational screens share a quiet canvas and readable control states. */
+.workspace {
+  background: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+
+.workspace :where(table) th {
+  height: 44px;
+}
+
+.workspace :where(table) td {
+  vertical-align: middle;
+}
+
+@media print {
+  .workspace { background: white; }
+}
+
 .workspace :where(button, a, input, select, textarea):focus-visible {
   outline: 2px solid #0d7d72;
+  outline-offset: 3px;
+}
+
+html.dark .workspace :where(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid #14b8a6;
   outline-offset: 3px;
 }
 

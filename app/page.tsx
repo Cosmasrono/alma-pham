@@ -26,6 +26,7 @@ import {
 import { BrandLogo } from "@/components/BrandLogo";
 import { DemoVideo } from "@/components/DemoVideo";
 import { MobileNav } from "@/components/MobileNav";
+import { ThemeToggle } from "@/components/ThemeProvider";
 import { PREMISES_REG_NO } from "@/lib/brand";
 
 const NAV_LINKS: [href: string, label: string][] = [
@@ -147,27 +148,27 @@ const TESTIMONIALS = [
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen text-zinc-900">
-      <header className="sticky top-0 z-30 border-b border-teal-950/5 bg-white/90 backdrop-blur-md">
+    <div className="min-h-screen text-zinc-900 dark:text-zinc-100">
+      <header className="sticky top-0 z-30 border-b border-teal-950/5 bg-white/90 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/90">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
           <div className="flex items-center gap-2.5">
             <BrandLogo />
             <div>
-              <p className="font-display text-base font-semibold leading-tight text-teal-950">
+              <p className="font-display text-base font-semibold leading-tight text-teal-950 dark:text-white">
                 Amla Medicare
               </p>
-              <p className="text-[10px] font-medium uppercase tracking-widest text-teal-600">
+              <p className="text-[10px] font-medium uppercase tracking-widest text-teal-600 dark:text-teal-400">
                 Clinic &amp; Diagnostics
               </p>
             </div>
           </div>
 
-          <nav className="hidden items-center gap-7 text-sm font-medium text-zinc-500 sm:flex">
+          <nav className="hidden items-center gap-7 text-sm font-medium text-zinc-500 sm:flex dark:text-zinc-400">
             {NAV_LINKS.map(([href, label]) => (
               <a
                 key={href}
                 href={href}
-                className="relative transition-colors hover:text-teal-700 after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-0 after:bg-teal-600 after:transition-all hover:after:w-full"
+                className="relative transition-colors hover:text-teal-700 dark:hover:text-teal-400 after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-0 after:bg-teal-600 after:transition-all hover:after:w-full"
               >
                 {label}
               </a>
@@ -175,6 +176,7 @@ export default function LandingPage() {
           </nav>
 
           <div className="flex items-center gap-3">
+            <ThemeToggle size="sm" className="border-zinc-200 bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:border-zinc-800 dark:bg-zinc-800 dark:text-zinc-200" />
             <a
               href={WHATSAPP_URL}
               target="_blank"
@@ -195,7 +197,7 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <section className="relative overflow-hidden bg-white/60">
+      <section className="relative overflow-hidden bg-white/60 dark:bg-zinc-950/60">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 overflow-hidden"
@@ -248,7 +250,7 @@ export default function LandingPage() {
               </a>
               <a
                 href="#services"
-                className="inline-flex h-12 items-center rounded-full border border-teal-950/10 bg-white px-6 text-sm font-medium text-zinc-700 shadow-sm transition-all hover:border-teal-700/30 hover:bg-teal-50/80 hover:text-teal-900 hover:-translate-y-0.5"
+                className="inline-flex h-12 items-center rounded-full border border-border bg-card px-6 text-sm font-medium text-foreground shadow-sm transition-all hover:border-teal-700/30 hover:bg-teal-50/80 dark:hover:bg-teal-950/60 hover:text-teal-900 dark:hover:text-teal-200 hover:-translate-y-0.5"
               >
                 Our services
               </a>
@@ -262,12 +264,12 @@ export default function LandingPage() {
               ].map(([n, label]) => (
                 <div
                   key={label}
-                  className="rounded-2xl border border-teal-950/[0.07] bg-white p-3 text-center shadow-sm"
+                  className="rounded-2xl border border-border bg-card p-3 text-center shadow-sm"
                 >
-                  <dt className="font-display text-2xl font-bold text-teal-700">
+                  <dt className="font-display text-2xl font-bold text-teal-700 dark:text-teal-400">
                     {n}
                   </dt>
-                  <dd className="mt-0.5 text-[10px] font-medium uppercase tracking-wide text-zinc-400">
+                  <dd className="mt-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                     {label}
                   </dd>
                 </div>
@@ -289,13 +291,13 @@ export default function LandingPage() {
               <div className="absolute inset-0 bg-linear-to-t from-teal-950/20 via-transparent to-transparent" />
             </div>
 
-            <div className="absolute -bottom-5 -left-5 hidden rounded-2xl border border-white/80 bg-white p-3 shadow-xl shadow-teal-950/15 sm:block">
+            <div className="absolute -bottom-5 -left-5 hidden rounded-2xl border border-border bg-card/90 backdrop-blur-md p-3 shadow-xl shadow-black/20 sm:block">
               <div className="flex items-center gap-3">
                 <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-teal-700">
                   <Shield className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-zinc-900">
+                  <p className="text-xs font-bold text-foreground">
                     Fully Licensed
                   </p>
                   <p className="text-[10px] text-zinc-500">
@@ -335,17 +337,17 @@ export default function LandingPage() {
         </div>
       </div>
 
-      <section id="services" className="bg-white/60">
+      <section id="services" className="bg-white/60 dark:bg-zinc-950/60">
         <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
           <div className="text-center">
-            <span className="inline-flex items-center gap-2 rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-teal-700 ring-1 ring-inset ring-teal-600/20">
+            <span className="inline-flex items-center gap-2 rounded-full bg-teal-50 dark:bg-teal-950/60 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-teal-700 dark:text-teal-300 ring-1 ring-inset ring-teal-600/20">
               <span className="h-1.5 w-1.5 rounded-full bg-teal-600" />
               Departments
             </span>
-            <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-teal-950 sm:text-4xl">
+            <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
               Everything under one roof
             </h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-zinc-500">
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
               Each department hands your visit to the next automatically — you
               never carry paperwork around the building.
             </p>
@@ -355,7 +357,7 @@ export default function LandingPage() {
             {SERVICES.map((s) => (
               <article
                 key={s.title}
-                className="group overflow-hidden rounded-3xl border border-teal-950/[0.07] bg-white shadow-[0_1px_2px_rgb(4_47_43/0.04),0_12px_32px_-16px_rgb(4_47_43/0.14)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_4px_8px_rgb(4_47_43/0.07),0_24px_48px_-16px_rgb(4_47_43/0.22)]"
+                className="group overflow-hidden rounded-3xl border border-border bg-card shadow-[0_1px_2px_rgb(4_47_43/0.04),0_12px_32px_-16px_rgb(4_47_43/0.14)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_4px_8px_rgb(4_47_43/0.07),0_24px_48px_-16px_rgb(4_47_43/0.22)]"
               >
                 <div className="relative h-48 overflow-hidden">
                   <Image
@@ -371,10 +373,10 @@ export default function LandingPage() {
                   </span>
                 </div>
                 <div className="p-5">
-                  <h3 className="font-display text-lg font-semibold text-teal-950">
+                  <h3 className="font-display text-lg font-semibold text-foreground">
                     {s.title}
                   </h3>
-                  <p className="mt-2 text-sm leading-6 text-zinc-500">{s.text}</p>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{s.text}</p>
                 </div>
               </article>
             ))}
@@ -395,20 +397,20 @@ export default function LandingPage() {
             />
           </div>
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wider text-teal-700 ring-1 ring-inset ring-teal-600/20">
+            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-semibold uppercase tracking-wider text-teal-700 dark:text-teal-300 ring-1 ring-inset ring-teal-600/30">
               <span className="h-1.5 w-1.5 rounded-full bg-teal-600" />
               Visit us
             </span>
-            <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-teal-950">
+            <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-foreground">
               Amla Medical Centre
             </h2>
-            <p className="mt-3 text-sm leading-6 text-zinc-500">
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
               Walk in for outpatient care: pharmacy, consultation, immunization,
               minor surgery and stitches, blood pressure and diabetic clinics,
               family planning and counselling. Pay by M-Pesa or cash.
             </p>
-            <p className="mt-4 inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-medium text-teal-900 ring-1 ring-teal-950/10">
-              <Shield className="h-4 w-4 text-teal-600" />
+            <p className="mt-4 inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium text-teal-900 dark:text-teal-300">
+              <Shield className="h-4 w-4 text-teal-600 dark:text-teal-400" />
               PPB licensed premises · Reg. No. {PREMISES_REG_NO}
             </p>
           </div>
@@ -416,17 +418,17 @@ export default function LandingPage() {
       </section>
 
       {/* ── Your Visit (Flow) ──────────────────────────────────────── */}
-      <section id="visit" className="border-t border-teal-950/5 bg-transparent">
+      <section id="visit" className="border-t border-border bg-transparent">
         <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
           <div className="text-center">
-            <span className="inline-flex items-center gap-2 rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-teal-700 ring-1 ring-inset ring-teal-600/20">
+            <span className="inline-flex items-center gap-2 rounded-full bg-teal-50 dark:bg-teal-950/60 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-teal-700 dark:text-teal-300 ring-1 ring-inset ring-teal-600/20">
               <span className="h-1.5 w-1.5 rounded-full bg-teal-600" />
               Patient journey
             </span>
-            <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-teal-950 sm:text-4xl">
+            <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
               Your visit, step by step
             </h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-zinc-500">
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
               One seamless journey from the door to the dispensary.
             </p>
           </div>
@@ -442,18 +444,18 @@ export default function LandingPage() {
               {FLOW.map((f, i) => (
                 <div key={f.step} className="relative flex flex-col items-center text-center">
                   <div
-                    className={`relative z-10 grid h-20 w-20 place-items-center rounded-full bg-linear-to-br ${f.color} shadow-lg ring-4 ring-white`}
+                    className={`relative z-10 grid h-20 w-20 place-items-center rounded-full bg-linear-to-br ${f.color} shadow-lg ring-4 ring-card`}
                   >
                     <f.Icon className="h-8 w-8 text-white" />
-                    <span className="absolute -right-1 -top-1 grid h-6 w-6 place-items-center rounded-full bg-white font-display text-xs font-bold text-teal-700 ring-1 ring-teal-200">
+                    <span className="absolute -right-1 -top-1 grid h-6 w-6 place-items-center rounded-full bg-card font-display text-xs font-bold text-teal-700 dark:text-teal-300 ring-1 ring-teal-200 dark:ring-teal-800">
                       {f.step}
                     </span>
                   </div>
-                  <div className="mt-5 rounded-2xl border border-teal-950/[0.07] bg-white p-5 shadow-sm w-full">
-                    <h3 className="font-display text-lg font-semibold text-teal-950">
+                  <div className="mt-5 rounded-2xl border border-border bg-card p-5 shadow-sm w-full">
+                    <h3 className="font-display text-lg font-semibold text-foreground">
                       {f.label}
                     </h3>
-                    <p className="mt-2 text-sm leading-6 text-zinc-500">{f.text}</p>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{f.text}</p>
                   </div>
                 </div>
               ))}
@@ -462,17 +464,17 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="demo" className="border-t border-teal-950/5 bg-white/60">
+      <section id="demo" className="border-t border-border bg-white/60 dark:bg-zinc-950/60">
         <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_1.5fr]">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-teal-700 ring-1 ring-inset ring-teal-600/20">
+            <span className="inline-flex items-center gap-2 rounded-full bg-teal-50 dark:bg-teal-950/60 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-teal-700 dark:text-teal-300 ring-1 ring-inset ring-teal-600/20">
               <span className="h-1.5 w-1.5 rounded-full bg-teal-600" />
               Walkthrough
             </span>
-            <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-teal-950 sm:text-4xl">
+            <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
               See Amla Medicare in action
             </h2>
-            <p className="mt-3 max-w-md text-sm leading-6 text-zinc-500">
+            <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground">
               A short tour of one patient visit as the clinic sees it — from the
               reception desk, through the doctor and the lab, to the pharmacy
               handing over medication on the same record.
@@ -494,14 +496,14 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="border-t border-teal-950/5 bg-transparent">
+      <section className="border-t border-border bg-transparent">
         <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
           <div className="text-center">
-            <span className="inline-flex items-center gap-2 rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-teal-700 ring-1 ring-inset ring-teal-600/20">
+            <span className="inline-flex items-center gap-2 rounded-full bg-teal-50 dark:bg-teal-950/60 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-teal-700 dark:text-teal-300 ring-1 ring-inset ring-teal-600/20">
               <span className="h-1.5 w-1.5 rounded-full bg-teal-600" />
               Patients
             </span>
-            <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-teal-950 sm:text-4xl">
+            <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
               What our patients say
             </h2>
           </div>
@@ -509,14 +511,14 @@ export default function LandingPage() {
             {TESTIMONIALS.map((t) => (
               <div
                 key={t.name}
-                className="rounded-3xl border border-teal-950/[0.07] bg-white p-6 shadow-sm"
+                className="rounded-3xl border border-border bg-card p-6 shadow-sm"
               >
                 <div className="flex gap-0.5 text-amber-400">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star key={i} className="h-4 w-4" fill="currentColor" />
                   ))}
                 </div>
-                <blockquote className="mt-4 text-sm leading-6 text-zinc-600">
+                <blockquote className="mt-4 text-sm leading-6 text-muted-foreground">
                   &ldquo;{t.quote}&rdquo;
                 </blockquote>
                 <div className="mt-5 flex items-center gap-3">
@@ -524,8 +526,8 @@ export default function LandingPage() {
                     {t.initials}
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-zinc-900">{t.name}</p>
-                    <p className="text-xs text-zinc-400">{t.role}</p>
+                    <p className="text-sm font-semibold text-foreground">{t.name}</p>
+                    <p className="text-xs text-muted-foreground">{t.role}</p>
                   </div>
                 </div>
               </div>

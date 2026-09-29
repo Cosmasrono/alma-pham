@@ -16,6 +16,23 @@ bun dev
 
 Open [http://localhost:3001](http://localhost:3001) with your browser to see the result.
 
+## Staff invitations
+
+Set `APP_URL` to the public website address staff can open from their devices
+(for example, `https://clinic.example.com`). A localhost URL only works on the
+computer running the app. Configure `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`,
+`MAIL_PASSWORD`, and optionally `MAIL_FROM_ADDRESS` / `MAIL_FROM_NAME`.
+
+In **Users**, create a staff account with an email address. The app emails the
+username and a single-use password setup link valid for seven days. Staff choose
+their password, then select **Continue to sign in**. No password is emailed.
+If delivery fails, the account remains in the list; use **Send setup link** to
+retry. Sending a new link invalidates previous links. Existing users can also
+use **Forgot password**, whose links expire after 30 minutes.
+
+Run the isolated invitation and reset tests with
+`pnpm exec tsx --test scripts/account-setup.test.ts`.
+
 ## SMTP Certificate Troubleshooting
 
 SMTP certificate verification is enabled by default. The mail transport includes the operating system's trusted certificates alongside Node's default certificates on Node 22.15+/23.10+. This also works when Next.js starts without `--use-system-ca`. On older Node versions, the transport retains Node's default certificate trust. This supports SMTP connections inspected by security software whose CA is already trusted by Windows.

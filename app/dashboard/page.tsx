@@ -8,6 +8,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useClinic } from "@/lib/store";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, PageHeader, cn, inputClass } from "@/components/ui";
 import { BranchOverview } from "@/components/BranchOverview";
 import { InventoryActivity } from "@/components/InventoryActivity";
@@ -378,7 +379,7 @@ export default function Dashboard() {
     <div>
       <PageHeader
         title="Dashboard"
-        subtitle="Live overview of every patient in the building, and how the clinic is performing"
+        subtitle="Your clinic at a glance. Track patient queues, collections, and daily operations."
       />
 
       {/* --- live board (never filtered) ------------------------------------ */}
@@ -392,7 +393,7 @@ export default function Dashboard() {
             Right now
           </h2>
           <span className="text-xs text-zinc-400">
-            {data.visits.filter((v) => v.status !== "completed").length} patients in
+            {clinicVisits(data).filter((v) => v.status !== "completed").length} patients in
             the building
           </span>
         </div>
@@ -428,10 +429,10 @@ export default function Dashboard() {
               onClick={() => setPreset(p.key)}
               aria-pressed={preset === p.key}
               className={cn(
-                "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+                "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
                 preset === p.key
                   ? "bg-teal-700 text-white shadow-sm"
-                  : "border border-zinc-200 bg-white text-zinc-600 hover:border-teal-700/30 hover:text-teal-900",
+                  : "border border-border bg-card text-muted-foreground hover:border-teal-700/30 hover:text-foreground",
               )}
             >
               {p.label}
@@ -461,18 +462,6 @@ export default function Dashboard() {
           {rangeLabel(preset, range.from, range.to)}
         </p>
       </section>
-
-      {/* --- every branch side by side (same period) ------------------------- */}
-      {BRANCHES_ENABLED && (
-        <div className="mt-6">
-          <BranchOverview range={range} />
-        </div>
-      )}
-
-      {/* --- inventory security: every stock change, flags, branch movement ---- */}
-      <div className="mt-6">
-        <InventoryActivity range={range} />
-      </div>
 
       {viewingLabel && (
         <h2 className="mt-2 font-display text-lg font-semibold text-teal-950">{viewingLabel}</h2>
@@ -524,184 +513,198 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-3">
-        <ChartCard
-          title="Revenue collected"
-          subtitle={`KSh per ${unitLabel} · ${rangeLabel(preset, range.from, range.to)}`}
-          className="lg:col-span-2"
-          table={{
-            columns: ["Period", "Revenue (KSh)"],
-            rows: trend.map((p) => [p.full ?? p.label, Math.round(p.values.revenue)]),
-          }}
-        >
-          <TrendChart
-            points={trend}
-            series={[{ key: "revenue", label: "Revenue", color: SERIES_COLORS[0] }]}
-            format={money}
-            formatAxis={moneyAxis}
-          />
-        </ChartCard>
-
-        <ChartCard
-          title="How patients paid"
-          subtitle="Share of collections by method"
-          table={{
-            columns: ["Method", "Collected (KSh)"],
-            rows: view.methods.map((m) => [m.label, Math.round(m.value)]),
-          }}
-        >
-          <StackedBar
-            segments={view.methods}
-            format={money}
-            emptyLabel="No payments in this period."
-          />
-        </ChartCard>
-
-        <ChartCard
-          title="Visits opened and closed"
-          subtitle={`Per ${unitLabel} — a widening gap means patients are stacking up`}
-          className="lg:col-span-2"
-          table={{
-            columns: ["Period", "Opened", "Closed"],
-            rows: trend.map((p) => [
-              p.full ?? p.label,
-              p.values.started,
-              p.values.completed,
-            ]),
-          }}
-        >
-          <ColumnChart
-            points={trend}
-            series={[
-              { key: "started", label: "Opened", color: SERIES_COLORS[0] },
-              { key: "completed", label: "Closed", color: SERIES_COLORS[1] },
-            ]}
-            format={countFormat}
-            formatAxis={countFormat}
-            integerAxis
-          />
-        </ChartCard>
-
-        <ChartCard
-          title="Patient journey"
-          subtitle="Visits that reached each stage"
-          table={{
-            columns: ["Stage", "Visits"],
-            rows: view.journey.map((s) => [s.label, s.value]),
-          }}
-        >
-          <Funnel stages={view.journey} format={countFormat} />
-        </ChartCard>
-
-        <ChartCard
-          title="Revenue by department"
-          subtitle="Settled charges, KSh"
-          table={{
-            columns: ["Department", "Revenue (KSh)"],
-            rows: view.departments.map((d) => [d.label, Math.round(d.value)]),
-          }}
-        >
-          <BarList items={view.departments} format={money} />
-        </ChartCard>
-
-        <ChartCard
-          title="Doctor workload"
-          subtitle="Visits assigned in this period"
-          table={{
-            columns: ["Doctor", "Visits", "Closed"],
-            rows: view.doctorLoad.map((d) => [
-              d.label,
-              d.value,
-              d.meta?.replace(" closed", "") ?? 0,
-            ]),
-          }}
-        >
-          <BarList
-            items={view.doctorLoad}
-            format={countFormat}
-            color={SERIES_COLORS[2]}
-          />
-        </ChartCard>
-
-        <ChartCard
-          title="Top medicines"
-          subtitle="By pharmacy revenue, KSh"
-          table={{
-            columns: ["Medicine", "Revenue (KSh)", "Units"],
-            rows: view.medicines.map((m) => [
-              m.label,
-              Math.round(m.value),
-              m.meta?.replace(" sold", "") ?? 0,
-            ]),
-          }}
-        >
-          <BarList
-            items={view.medicines}
-            format={money}
-            color={SERIES_COLORS[1]}
-          />
-        </ChartCard>
-
-        <ChartCard
-          title="When patients arrive"
-          subtitle="Check-ins by weekday and hour — darker is busier"
-          className="lg:col-span-3"
-          table={{
-            columns: ["Day", ...view.hours.map(hourLabel)],
-            rows: view.heatRows.map((r) => [r.label, ...r.values]),
-          }}
-        >
-          <Heatmap
-            columns={view.hours.map(hourLabel)}
-            rows={view.heatRows}
-            format={countFormat}
-            unitLabel="check-ins"
-          />
-        </ChartCard>
-      </div>
-
-      <section className="mt-8" aria-labelledby="quick-actions-title">
-        <h2
-          id="quick-actions-title"
-          className="mb-3 text-sm font-semibold text-teal-950"
-        >
-          Common tasks
-        </h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {QUICK_ACTIONS.map((action) => (
-            <Link
-              key={action.href}
-              href={action.href}
-              className="group rounded-2xl border border-teal-950/[0.07] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-600/30 hover:shadow-md"
+      <Tabs defaultValue="overview" className="mt-6">
+        <TabsList aria-label="Dashboard views">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="inventory">Inventory & branches</TabsTrigger>
+        </TabsList>
+        <TabsContent value="overview">
+          <div className="mt-4 grid gap-4 lg:grid-cols-3">
+            <ChartCard
+              title="Revenue collected"
+              subtitle={`KSh per ${unitLabel} · ${rangeLabel(preset, range.from, range.to)}`}
+              className="lg:col-span-2"
+              table={{
+                columns: ["Period", "Revenue (KSh)"],
+                rows: trend.map((p) => [p.full ?? p.label, Math.round(p.values.revenue)]),
+              }}
             >
-              <div className="flex items-center justify-between gap-3">
-                <p className="font-semibold text-teal-950">{action.label}</p>
-                <span
-                  aria-hidden
-                  className="text-teal-600 transition-transform group-hover:translate-x-1"
-                >
-                  →
-                </span>
-              </div>
-              <p className="mt-1 text-sm text-zinc-500">{action.detail}</p>
-            </Link>
-          ))}
-        </div>
-      </section>
+              <TrendChart
+                points={trend}
+                series={[{ key: "revenue", label: "Revenue", color: SERIES_COLORS[0] }]}
+                format={money}
+                formatAxis={moneyAxis}
+              />
+            </ChartCard>
 
-      <Card className="mt-6">
-        <h2 className="text-sm font-semibold text-zinc-700">
-          How a patient flows
-        </h2>
-        <p className="mt-2 text-sm leading-6 text-zinc-500">
-          Reception registers the patient, routes them to a doctor, then takes
-          vitals and sets priority → Doctor consults and may order{" "}
-          <strong>lab, radiology or procedures</strong> → patient returns to the
-          doctor with results → doctor prescribes → Pharmacy dispenses and closes
-          the visit. Each number in <strong>Right now</strong> is a live queue —
-          click to jump to that station.
-        </p>
-      </Card>
+            <ChartCard
+              title="How patients paid"
+              subtitle="Share of collections by method"
+              table={{
+                columns: ["Method", "Collected (KSh)"],
+                rows: view.methods.map((m) => [m.label, Math.round(m.value)]),
+              }}
+            >
+              <StackedBar
+                segments={view.methods}
+                format={money}
+                emptyLabel="No payments in this period."
+              />
+            </ChartCard>
+
+          </div>
+          <section className="mt-8" aria-labelledby="quick-actions-title">
+            <h2
+              id="quick-actions-title"
+              className="mb-3 text-sm font-semibold text-foreground"
+            >
+              Common tasks
+            </h2>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {QUICK_ACTIONS.map((action) => (
+                <Link
+                  key={action.href}
+                  href={action.href}
+                  className="group rounded-xl border border-border bg-card p-4 shadow-sm transition-colors hover:border-teal-600/40 hover:bg-teal-50/40 dark:hover:bg-teal-950/20"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-semibold text-foreground">{action.label}</p>
+                    <span
+                      aria-hidden
+                      className="text-teal-600 dark:text-teal-400 transition-transform group-hover:translate-x-1"
+                    >
+                      →
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">{action.detail}</p>
+                </Link>
+              ))}
+            </div>
+          </section>
+
+        </TabsContent>
+        <TabsContent value="analytics">
+          <div className="grid gap-4 lg:grid-cols-3">
+            <ChartCard
+              title="Visits opened and closed"
+              subtitle={`Per ${unitLabel} — a widening gap means patients are stacking up`}
+              className="lg:col-span-2"
+              table={{
+                columns: ["Period", "Opened", "Closed"],
+                rows: trend.map((p) => [
+                  p.full ?? p.label,
+                  p.values.started,
+                  p.values.completed,
+                ]),
+              }}
+            >
+              <ColumnChart
+                points={trend}
+                series={[
+                  { key: "started", label: "Opened", color: SERIES_COLORS[0] },
+                  { key: "completed", label: "Closed", color: SERIES_COLORS[1] },
+                ]}
+                format={countFormat}
+                formatAxis={countFormat}
+                integerAxis
+              />
+            </ChartCard>
+
+            <ChartCard
+              title="Patient journey"
+              subtitle="Visits that reached each stage"
+              table={{
+                columns: ["Stage", "Visits"],
+                rows: view.journey.map((s) => [s.label, s.value]),
+              }}
+            >
+              <Funnel stages={view.journey} format={countFormat} />
+            </ChartCard>
+
+            <ChartCard
+              title="Revenue by department"
+              subtitle="Settled charges, KSh"
+              table={{
+                columns: ["Department", "Revenue (KSh)"],
+                rows: view.departments.map((d) => [d.label, Math.round(d.value)]),
+              }}
+            >
+              <BarList items={view.departments} format={money} />
+            </ChartCard>
+
+            <ChartCard
+              title="Doctor workload"
+              subtitle="Visits assigned in this period"
+              table={{
+                columns: ["Doctor", "Visits", "Closed"],
+                rows: view.doctorLoad.map((d) => [
+                  d.label,
+                  d.value,
+                  d.meta?.replace(" closed", "") ?? 0,
+                ]),
+              }}
+            >
+              <BarList
+                items={view.doctorLoad}
+                format={countFormat}
+                color={SERIES_COLORS[2]}
+              />
+            </ChartCard>
+
+            <ChartCard
+              title="Top medicines"
+              subtitle="By pharmacy revenue, KSh"
+              table={{
+                columns: ["Medicine", "Revenue (KSh)", "Units"],
+                rows: view.medicines.map((m) => [
+                  m.label,
+                  Math.round(m.value),
+                  m.meta?.replace(" sold", "") ?? 0,
+                ]),
+              }}
+            >
+              <BarList
+                items={view.medicines}
+                format={money}
+                color={SERIES_COLORS[1]}
+              />
+            </ChartCard>
+
+            <ChartCard
+              title="When patients arrive"
+              subtitle="Check-ins by weekday and hour — darker is busier"
+              className="lg:col-span-3"
+              table={{
+                columns: ["Day", ...view.hours.map(hourLabel)],
+                rows: view.heatRows.map((r) => [r.label, ...r.values]),
+              }}
+            >
+              <Heatmap
+                columns={view.hours.map(hourLabel)}
+                rows={view.heatRows}
+                format={countFormat}
+                unitLabel="check-ins"
+              />
+            </ChartCard>
+          </div>
+
+        </TabsContent>
+        <TabsContent value="inventory">
+          {/* --- every branch side by side (same period) ------------------------- */}
+          {BRANCHES_ENABLED && (
+            <div className="mt-6">
+              <BranchOverview range={range} />
+            </div>
+          )}
+
+          {/* --- inventory security: every stock change, flags, branch movement ---- */}
+          <div className="mt-6">
+            <InventoryActivity range={range} />
+          </div>
+
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Search, UserRound } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useClinic } from "@/lib/store";
 import {
   Card,
@@ -16,6 +18,7 @@ import {
   doctorMap,
   doctorName,
   ordersForVisit,
+  paymentsOf,
   patientName,
   searchPatients,
   visitLocation,
@@ -38,12 +41,16 @@ export default function PatientsPage() {
         subtitle="Search the register and review a patient's full visit history"
       />
 
+      <div className="relative mb-5">
+      <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-3 size-4 text-zinc-400" />
       <input
-        className={`${inputClass} mb-4 w-full`}
+        aria-label="Search patients by name, national ID or MRN"
+        className={`${inputClass} w-full pl-10`}
         placeholder="Search by name, national ID or MRN…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
         <div className="flex flex-col gap-2">
@@ -57,10 +64,11 @@ export default function PatientsPage() {
               <button
                 key={p.id}
                 onClick={() => setSelectedId(p.id)}
+                aria-pressed={selectedId === p.id}
                 className={`rounded-xl border p-3 text-left transition-colors ${
                   selectedId === p.id
-                    ? "border-teal-500 bg-teal-50"
-                    : "border-zinc-200 bg-white hover:border-zinc-300"
+                    ? "border-teal-500 bg-teal-50 dark:bg-teal-950/60 ring-1 ring-teal-500/20"
+                    : "border-border bg-card hover:bg-muted/50"
                 }`}
               >
                 <p className="text-sm font-medium">{patientName(p)}</p>
@@ -74,7 +82,7 @@ export default function PatientsPage() {
 
         <div>
           {selected ? (
-            <PatientHistory patientId={selected.id} />
+            <PatientHistory key={selected.id} patientId={selected.id} />
           ) : (
             <EmptyState>Select a patient to see their history.</EmptyState>
           )}
@@ -89,15 +97,48 @@ function PatientHistory({ patientId }: { patientId: string }) {
   const dmap = doctorMap(data);
   const patient = data.patients.find((p) => p.id === patientId);
   const visits = visitsForPatient(data, patientId);
+  const prescriptions = visits.flatMap((visit) => ordersForVisit(data, visit.id).filter((order) => order.type === "prescription"));
+  const payments = visits.flatMap((visit) => paymentsOf(visit));
   if (!patient) return null;
 
   return (
     <Card>
+      <div className="mb-5 flex items-center gap-3 border-b border-zinc-100 pb-5">
+      <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-teal-50 text-teal-700"><UserRound aria-hidden="true" className="size-6" /></span>
+      <div>
       <h2 className="text-lg font-semibold">{patientName(patient)}</h2>
       <p className="text-sm text-zinc-500">
         {patient.mrn} · ID {patient.nationalId || "—"} · {patient.gender},{" "}
         {patient.age}y · {patient.phone || "no phone"}
       </p>
+      </div>
+      </div>
+
+      <Tabs defaultValue="overview">
+        <TabsList aria-label="Patient record sections">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="visits">Visits</TabsTrigger>
+          <TabsTrigger value="prescriptions">Prescriptions</TabsTrigger>
+          <TabsTrigger value="payments">Payments</TabsTrigger>
+        </TabsList>
+        <TabsContent value="overview">
+          <dl className="grid gap-4 sm:grid-cols-2">
+            {[
+              ["Medical record", patient.mrn],
+              ["Phone", patient.phone || "Not recorded"],
+              ["National ID", patient.nationalId || "Not recorded"],
+              ["Age / gender", `${patient.age} years · ${patient.gender}`],
+              ["Recorded visits", String(visits.length)],
+              ["Total paid", `KSh ${payments.reduce((total, payment) => total + payment.amount, 0).toLocaleString("en-KE")}`],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-lg border border-zinc-200 p-4">
+                <dt className="text-xs text-zinc-500">{label}</dt>
+                <dd className="mt-1 text-sm font-medium text-zinc-900">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </TabsContent>
+        <TabsContent value="visits">
 
       <h3 className="mb-2 mt-5 text-sm font-semibold text-zinc-700">
         Visit history ({visits.length})
@@ -164,6 +205,37 @@ function PatientHistory({ patientId }: { patientId: string }) {
           })}
         </ol>
       )}
+        </TabsContent>
+        <TabsContent value="prescriptions">
+          {prescriptions.length === 0 ? <EmptyState>No prescriptions recorded.</EmptyState> : (
+            <ul className="space-y-3">
+              {prescriptions.map((order) => (
+                <li key={order.id} className="rounded-lg border border-zinc-200 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-500">
+                    <span>{new Date(order.createdAt).toLocaleDateString("en-KE")}</span>
+                    <span className="capitalize">{order.status.replace(/-/g, " ")}</span>
+                  </div>
+                  <p className="mt-2 text-sm font-medium">{(order.meds ?? []).map((med) => med.name).join(", ") || order.title}</p>
+                  {order.instructions && <p className="mt-1 text-sm text-zinc-600">{order.instructions}</p>}
+                </li>
+              ))}
+            </ul>
+          )}
+        </TabsContent>
+        <TabsContent value="payments">
+          {payments.length === 0 ? <EmptyState>No payments recorded.</EmptyState> : (
+            <div className="overflow-x-auto rounded-lg border border-zinc-200">
+              <table className="w-full text-left text-sm">
+                <caption className="sr-only">Patient payment history</caption>
+                <thead className="bg-zinc-50 text-xs text-zinc-500"><tr><th scope="col" className="px-3">Date</th><th scope="col" className="px-3">Method</th><th scope="col" className="px-3">Reference</th><th scope="col" className="px-3 text-right">Amount</th></tr></thead>
+                <tbody className="divide-y divide-zinc-100">
+                  {payments.map((payment, index) => <tr key={`${payment.paidAt}-${index}`}><td className="whitespace-nowrap px-3 py-3">{new Date(payment.paidAt).toLocaleDateString("en-KE")}</td><td className="px-3 py-3 capitalize">{payment.method === "mpesa" ? "M-Pesa" : payment.method}</td><td className="px-3 py-3">{payment.reference || "—"}</td><td className="whitespace-nowrap px-3 py-3 text-right font-medium tabular-nums">KSh {payment.amount.toLocaleString("en-KE")}</td></tr>)}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </Card>
   );
 }

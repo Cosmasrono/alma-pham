@@ -2,8 +2,8 @@
 
 import { createHash, randomBytes, randomInt } from "crypto";
 import { prisma } from "@/lib/prisma";
-import type { Role } from "@/lib/auth/roles";
-import { generateTempPassword, hashPassword, verifyPassword } from "@/lib/auth/password";
+import { ROLES, type Role } from "@/lib/auth/roles";
+import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { mpesaConfigured } from "@/lib/server/mpesa";
 import { type BranchContext, ensureBranchSetup, mapBranch } from "@/lib/server/branches";
 import {
@@ -1004,35 +1004,26 @@ export async function createUser(input: {
   role: Role;
   password?: string;
   branchId?: string;
-}): Promise<{ error: string } | { user: StaffUser; tempPassword: string }> {
-  const username = input.username.trim().toLowerCase();
-  if (!username || !input.name.trim()) {
+}): Promise<{ error: string } | { user: StaffUser }> {
+  const username = String(input.username ?? "").trim().toLowerCase();
+  if (!username || !String(input.name ?? "").trim()) {
     return { error: "Username and name are required." };
   }
   if (input.role === "admin") {
     return { error: "There can only be one administrator." };
   }
+  if (!ROLES.includes(input.role) || input.role === "developer") return { error: "Choose a valid staff role." };
   const branch = await validBranchId(input.branchId);
   if ("error" in branch) return branch;
   const existing = await prisma.user.findUnique({ where: { username } });
   if (existing) return { error: "That username is already taken." };
 
   const email = cleanEmail(input.email);
-  if (email && (await emailTaken(email))) {
-    return { error: "That email is already used by another account." };
-  }
+  if (!email || !validEmail(email)) return { error: "A valid email address is required to send the password setup link." };
+  if (await emailTaken(email)) return { error: "That email is already used by another account." };
 
-  const password = String(input.password ?? "").trim();
-  if (!password && !email) {
-    return {
-      error:
-        "Provide either a temporary password or an email address for setup.",
-    };
-  }
-
-  // When no temporary password is provided we generate a readable one and
-  // email it to the new user together with their username.
-  const bootstrapPassword = password || generateTempPassword();
+  // This random password is never shared. Staff choose their own through email.
+  const bootstrapPassword = randomBytes(32).toString("base64url");
 
   const user = await prisma.user.create({
     data: {
@@ -1045,7 +1036,7 @@ export async function createUser(input: {
       branchId: branch.branchId,
     },
   });
-  return { user: mapUser(user), tempPassword: bootstrapPassword };
+  return { user: mapUser(user) };
 }
 
 export async function updateUser(input: {
@@ -1158,21 +1149,29 @@ export async function resetPasswordWithToken(
   if (!password || password.length < 6) {
     return { error: "Password must be at least 6 characters." };
   }
-  const reset = await prisma.passwordReset.findUnique({
-    where: { tokenHash: hashToken(String(token ?? "")) },
+  const passwordHash = await hashPassword(password);
+  return prisma.$transaction(async (tx) => {
+    const now = new Date();
+    const reset = await tx.passwordReset.findUnique({
+      where: { tokenHash: hashToken(String(token ?? "")) },
+    });
+    const invalid = { error: "This reset link is invalid or has expired. Request a new one." };
+    if (!reset || reset.usedAt || reset.expiresAt <= now) return invalid;
+    const user = await tx.user.findUnique({ where: { id: reset.userId } });
+    if (!user?.active) return invalid;
+    // MongoDB distinguishes a missing field from an explicit null.
+    const claimed = await tx.passwordReset.updateMany({
+      where: { id: reset.id, expiresAt: { gt: now }, OR: [{ usedAt: null }, { usedAt: { isSet: false } }] },
+      data: { usedAt: now },
+    });
+    if (claimed.count !== 1) return invalid;
+    await tx.user.update({
+      where: { id: user.id, active: true },
+      data: { passwordHash },
+    });
+    await tx.passwordReset.deleteMany({ where: { userId: user.id, id: { not: reset.id } } });
+    return { username: user.username };
   });
-  if (!reset || reset.usedAt || reset.expiresAt < new Date()) {
-    return { error: "This reset link is invalid or has expired. Request a new one." };
-  }
-  const user = await prisma.user.update({
-    where: { id: reset.userId },
-    data: { passwordHash: await hashPassword(password) },
-  });
-  await prisma.passwordReset.update({
-    where: { id: reset.id },
-    data: { usedAt: new Date() },
-  });
-  return { username: user.username };
 }
 
 // --- medicine catalog (admin) -----------------------------------------------

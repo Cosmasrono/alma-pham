@@ -1,5 +1,8 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { LoaderIcon } from "lucide-react";
+import { Button as BaseButton } from "./ui/button";
+import { cn } from "@/lib/utils";
+export { cn } from "@/lib/utils";
 import type { OrderStatus, Priority } from "@/lib/types";
 import {
   LOCATION_LABELS,
@@ -9,10 +12,6 @@ import {
   type VisitLocation,
   type VisitTiming,
 } from "@/lib/selectors";
-
-export function cn(...parts: (string | false | null | undefined)[]) {
-  return parts.filter(Boolean).join(" ");
-}
 
 export function Spinner({
   className,
@@ -39,21 +38,12 @@ export function Button({
   className,
   ...props
 }: ButtonProps) {
-  const base =
-    "inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2";
-  const sizes = { sm: "min-h-9 px-3.5 py-1.5 text-sm", md: "min-h-11 px-5 py-2.5 text-sm" };
-  const variants = {
-    primary:
-      "bg-teal-700 text-white shadow-sm shadow-teal-950/20 hover:bg-teal-800",
-    secondary:
-      "bg-white text-zinc-800 border border-zinc-200 shadow-sm hover:border-teal-700/30 hover:bg-teal-50/60 hover:text-teal-900",
-    ghost: "text-zinc-600 hover:bg-teal-900/5 hover:text-teal-900",
-    danger:
-      "bg-red-600 text-white shadow-sm shadow-red-900/20 hover:bg-red-700",
-  };
+  const variants = { primary: "default", secondary: "outline", ghost: "ghost", danger: "destructive" } as const;
   return (
-    <button
-      className={cn(base, sizes[size], variants[variant], className)}
+    <BaseButton
+      variant={variants[variant]}
+      size={size === "md" ? "default" : "sm"}
+      className={className}
       {...props}
     />
   );
@@ -69,7 +59,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-[0_2px_6px_-2px_rgb(4_47_43/0.06)]",
+        "rounded-xl border border-border bg-card p-5 text-card-foreground shadow-sm",
         className,
       )}
     >
@@ -87,14 +77,14 @@ export function Field({
 }) {
   return (
     <label className="flex flex-col gap-1.5 text-sm">
-      <span className="font-medium text-zinc-700">{label}</span>
+      <span className="font-medium text-foreground/85">{label}</span>
       {children}
     </label>
   );
 }
 
 export const inputClass =
-  "h-10 rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-900 shadow-sm shadow-teal-950/[0.03] placeholder:text-zinc-400 transition-colors focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20";
+  "h-10 rounded-lg border border-input bg-card px-3 text-sm text-foreground shadow-xs placeholder:text-muted-foreground transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50";
 
 export function PageHeader({
   title,
@@ -108,10 +98,10 @@ export function PageHeader({
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-950 sm:text-3xl">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
           {title}
         </h1>
-        {subtitle && <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-600">{subtitle}</p>}
+        {subtitle && <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-muted-foreground">{subtitle}</p>}
       </div>
       {action}
     </div>
@@ -120,10 +110,10 @@ export function PageHeader({
 
 export function EmptyState({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-dashed border-teal-900/20 bg-white/70 p-10 text-center text-sm text-zinc-500">
+    <div className="rounded-2xl border border-dashed border-teal-900/20 bg-card/70 p-10 text-center text-sm text-muted-foreground dark:border-teal-500/25">
       <span
         aria-hidden
-        className="mx-auto mb-3 grid h-10 w-10 place-items-center rounded-full bg-teal-50 text-base text-teal-700"
+        className="mx-auto mb-3 grid h-10 w-10 place-items-center rounded-full bg-teal-50 text-base text-teal-700 dark:bg-teal-950/60 dark:text-teal-300"
       >
         ✚
       </span>
@@ -145,25 +135,25 @@ function BadgeDot() {
 }
 
 const locationStyle: Record<VisitLocation, string> = {
-  reception: "bg-amber-50 text-amber-800 ring-amber-600/20",
-  consultation: "bg-sky-50 text-sky-800 ring-sky-600/20",
-  lab: "bg-purple-50 text-purple-800 ring-purple-600/20",
-  radiology: "bg-indigo-50 text-indigo-800 ring-indigo-600/20",
-  procedure: "bg-fuchsia-50 text-fuchsia-800 ring-fuchsia-600/20",
-  pharmacy: "bg-teal-50 text-teal-800 ring-teal-600/25",
-  completed: "bg-zinc-100 text-zinc-600 ring-zinc-500/20",
+  reception: "bg-amber-50 text-amber-800 ring-amber-600/20 dark:bg-amber-950/50 dark:text-amber-300 dark:ring-amber-500/30",
+  consultation: "bg-sky-50 text-sky-800 ring-sky-600/20 dark:bg-sky-950/50 dark:text-sky-300 dark:ring-sky-500/30",
+  lab: "bg-purple-50 text-purple-800 ring-purple-600/20 dark:bg-purple-950/50 dark:text-purple-300 dark:ring-purple-500/30",
+  radiology: "bg-indigo-50 text-indigo-800 ring-indigo-600/20 dark:bg-indigo-950/50 dark:text-indigo-300 dark:ring-indigo-500/30",
+  procedure: "bg-fuchsia-50 text-fuchsia-800 ring-fuchsia-600/20 dark:bg-fuchsia-950/50 dark:text-fuchsia-300 dark:ring-fuchsia-500/30",
+  pharmacy: "bg-teal-50 text-teal-800 ring-teal-600/25 dark:bg-teal-950/50 dark:text-teal-300 dark:ring-teal-500/30",
+  completed: "bg-zinc-100 text-zinc-600 ring-zinc-500/20 dark:bg-zinc-800 dark:text-zinc-300 dark:ring-zinc-700",
 };
 
 const orderStatusStyle: Record<OrderStatus, string> = {
-  requested: "bg-amber-50 text-amber-800 ring-amber-600/20",
-  "in-progress": "bg-sky-50 text-sky-800 ring-sky-600/20",
-  completed: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
+  requested: "bg-amber-50 text-amber-800 ring-amber-600/20 dark:bg-amber-950/50 dark:text-amber-300 dark:ring-amber-500/30",
+  "in-progress": "bg-sky-50 text-sky-800 ring-sky-600/20 dark:bg-sky-950/50 dark:text-sky-300 dark:ring-sky-500/30",
+  completed: "bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-950/50 dark:text-emerald-300 dark:ring-emerald-500/30",
 };
 
 const priorityStyle: Record<Priority, string> = {
-  normal: "bg-zinc-100 text-zinc-600 ring-zinc-500/20",
-  urgent: "bg-orange-50 text-orange-800 ring-orange-600/25",
-  emergency: "bg-red-50 text-red-700 ring-red-600/25",
+  normal: "bg-zinc-100 text-zinc-600 ring-zinc-500/20 dark:bg-zinc-800 dark:text-zinc-300 dark:ring-zinc-700",
+  urgent: "bg-orange-50 text-orange-800 ring-orange-600/25 dark:bg-orange-950/50 dark:text-orange-300 dark:ring-orange-500/30",
+  emergency: "bg-red-50 text-red-700 ring-red-600/25 dark:bg-red-950/50 dark:text-red-300 dark:ring-red-500/30",
 };
 
 export function PriorityBadge({ priority }: { priority: Priority }) {
@@ -190,12 +180,12 @@ export function LocationBadge({ location }: { location: VisitLocation }) {
  *  past 2 so slow-moving patients stand out at a glance. */
 export function StayBadge({ timing }: { timing: VisitTiming }) {
   const style = timing.done
-    ? "bg-zinc-100 text-zinc-600 ring-zinc-500/20"
+    ? "bg-zinc-100 text-zinc-600 ring-zinc-500/20 dark:bg-zinc-800 dark:text-zinc-300 dark:ring-zinc-700"
     : timing.totalMs >= VERY_LONG_STAY_MS
-      ? "bg-red-50 text-red-700 ring-red-600/25"
+      ? "bg-red-50 text-red-700 ring-red-600/25 dark:bg-red-950/50 dark:text-red-300 dark:ring-red-500/30"
       : timing.totalMs >= LONG_STAY_MS
-        ? "bg-amber-50 text-amber-800 ring-amber-600/25"
-        : "bg-zinc-50 text-zinc-500 ring-zinc-500/15";
+        ? "bg-amber-50 text-amber-800 ring-amber-600/25 dark:bg-amber-950/50 dark:text-amber-300 dark:ring-amber-500/30"
+        : "bg-zinc-50 text-zinc-500 ring-zinc-500/15 dark:bg-zinc-800/60 dark:text-zinc-400 dark:ring-zinc-700/50";
   return (
     <span
       className={cn(badgeBase, "tabular-nums", style)}

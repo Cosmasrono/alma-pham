@@ -15,6 +15,7 @@ import { RouteLoadingOverlay } from "./PageLoadGate";
 import { AiAssistant } from "./AiAssistant";
 import { BrandLogo } from "./BrandLogo";
 import { BranchSwitcher } from "./BranchSwitcher";
+import { ThemeToggle } from "./ThemeProvider";
 import { MenuIcon, XIcon, LayoutDashboard, Store, Sparkles, Hospital, Users, Wallet, Settings, CalendarDays, Stethoscope, FlaskConical, Pill, Package, ArrowLeftRight, Building2, ChartNoAxesCombined, ClipboardList, UserPlus, ShieldCheck, ScrollText, ReceiptText, type LucideIcon } from "lucide-react";
 
 const NAV_ICONS: Record<string, LucideIcon> = {
@@ -116,7 +117,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <>
     {navigating && <RouteLoadingOverlay />}
-    <div className="workspace flex min-h-screen bg-transparent text-zinc-900">
+    <div className="workspace flex min-h-screen text-zinc-900">
       <a href="#workspace-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-100 focus:rounded-lg focus:bg-white focus:p-3">Skip to content</a>
       <aside className="sticky top-0 hidden h-dvh w-56 shrink-0 flex-col overflow-y-auto bg-teal-950 p-4 text-teal-50 md:flex xl:w-60 print:!hidden">
         <div className="mb-4 flex items-center gap-2.5 px-2">
@@ -129,6 +130,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
         <BranchSwitcher className="mb-3" />
+        <p className="mb-3 mt-4 px-3 text-[11px] font-semibold uppercase tracking-widest text-teal-200/60">Workspace</p>
         <nav className="flex flex-1 flex-col gap-1">
           {sections.map((section) => {
             const active = current?.key === section.key;
@@ -146,8 +148,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                   "flex min-h-11 items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
                   section.key === "developer" && "mt-auto",
                   active
-                    ? "bg-white/10 text-white shadow-inner shadow-white/5 ring-1 ring-inset ring-white/10"
-                    : "text-teal-200/75 hover:bg-white/5 hover:text-white",
+                    ? "bg-teal-50 text-teal-950 shadow-sm"
+                    : "text-teal-100/80 hover:bg-white/5 hover:text-white",
                 )}
               >
                 <NavIcon name={section.items.length === 1 ? href : section.key} />
@@ -165,20 +167,34 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
+        <div className="hidden h-16 shrink-0 items-center justify-between gap-4 border-b border-border bg-card px-6 md:flex lg:px-8 print:!hidden">
+          <div className="flex min-w-0 items-center gap-2 text-sm">
+            <span className="text-muted-foreground">Workspace</span>
+            <span aria-hidden className="text-muted-foreground/40">/</span>
+            <span className="truncate font-medium text-foreground">{current?.items.find((item) => item.href === pathname)?.label ?? current?.label ?? "Clinic"}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="rounded-md border border-border bg-muted/60 px-2.5 py-1 text-xs font-medium text-muted-foreground">{ROLE_LABELS[session.role]}</span>
+            <ThemeToggle size="sm" />
+          </div>
+        </div>
         <header className="flex items-center justify-between bg-teal-950 px-4 py-2.5 text-white md:hidden print:!hidden">
           <div className="flex items-center gap-2">
             <BrandMark size="sm" />
             <span className="font-display font-semibold">Amla Medicare</span>
           </div>
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(true)}
-            aria-label="Open navigation"
-            aria-expanded={mobileMenuOpen}
-            className="grid size-10 place-items-center rounded-xl text-teal-100 hover:bg-white/10"
-          >
-            <MenuIcon className="size-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle size="sm" />
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Open navigation"
+              aria-expanded={mobileMenuOpen}
+              className="grid size-10 place-items-center rounded-xl text-teal-100 hover:bg-white/10"
+            >
+              <MenuIcon className="size-5" />
+            </button>
+          </div>
         </header>
 
         <main id="workspace-content" tabIndex={-1} aria-busy={navigating} className="relative min-w-0 flex-1">
@@ -216,14 +232,17 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <p className="font-semibold">{session.name}</p>
                 <p className="text-xs text-teal-300">{ROLE_LABELS[session.role]}</p>
               </div>
-              <button
-                type="button"
-                onClick={() => setMobileMenuOpen(false)}
-                aria-label="Close navigation"
-                className="grid size-10 place-items-center rounded-xl hover:bg-white/10"
-              >
-                <XIcon className="size-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <ThemeToggle size="sm" />
+                <button
+                  type="button"
+                  onClick={() => setMobileMenuOpen(false)}
+                  aria-label="Close navigation"
+                  className="grid size-10 place-items-center rounded-xl hover:bg-white/10"
+                >
+                  <XIcon className="size-5" />
+                </button>
+              </div>
             </div>
 
             <BranchSwitcher className="mt-4" />
@@ -282,7 +301,7 @@ function SectionTabs({
   if (section.items.length < 2) return null;
 
   return (
-    <nav aria-label="Section navigation" className="mb-7 flex gap-1 overflow-x-auto border-b border-zinc-200 pb-3 print:hidden">
+    <nav aria-label="Section navigation" className="mb-7 flex gap-1 overflow-x-auto border-b border-border pb-3 print:hidden">
       {section.items.map((item) => {
         const active =
           pathname === item.href || pathname.startsWith(item.href + "/");
@@ -295,8 +314,8 @@ function SectionTabs({
             className={cn(
               "flex min-h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors",
               active
-                ? "bg-teal-700 text-white shadow-sm"
-                : "text-teal-900/65 hover:bg-teal-900/5 hover:text-teal-900",
+                ? "bg-primary/10 text-primary ring-1 ring-inset ring-primary/20 dark:bg-primary/20 dark:text-teal-300 dark:ring-primary/40 font-semibold"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
             <NavIcon name={item.href} />
@@ -371,8 +390,13 @@ function UserBox({
 
   return (
     <div className="mt-2 rounded-xl bg-white/5 p-3 ring-1 ring-inset ring-white/10">
-      <p className="px-1 text-sm font-medium text-white">{name}</p>
-      <p className="px-1 text-xs text-teal-300/80">{roleLabel}</p>
+      <div className="flex items-center justify-between px-1">
+        <div>
+          <p className="text-sm font-medium text-white">{name}</p>
+          <p className="text-xs text-teal-300/80">{roleLabel}</p>
+        </div>
+        <ThemeToggle size="sm" />
+      </div>
       <button
         onClick={() => {
           setOpenPin((v) => !v);

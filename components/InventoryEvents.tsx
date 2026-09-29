@@ -57,16 +57,16 @@ export const EVENT_LABELS: Record<EventType, string> = {
 };
 
 const EVENT_STYLE: Record<EventType, string> = {
-  sale: "bg-sky-50 text-sky-800",
-  receive: "bg-emerald-50 text-emerald-800",
-  adjust: "bg-amber-50 text-amber-800",
-  "write-off": "bg-rose-50 text-rose-800",
-  "transfer-out": "bg-violet-50 text-violet-800",
-  "transfer-in": "bg-violet-50 text-violet-800",
-  import: "bg-emerald-50 text-emerald-800",
-  opening: "bg-zinc-100 text-zinc-700",
-  price: "bg-orange-50 text-orange-800",
-  edit: "bg-zinc-100 text-zinc-700",
+  sale: "bg-sky-50 text-sky-800 dark:bg-sky-950/50 dark:text-sky-300",
+  receive: "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
+  adjust: "bg-amber-50 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
+  "write-off": "bg-rose-50 text-rose-800 dark:bg-rose-950/50 dark:text-rose-300",
+  "transfer-out": "bg-violet-50 text-violet-800 dark:bg-violet-950/50 dark:text-violet-300",
+  "transfer-in": "bg-violet-50 text-violet-800 dark:bg-violet-950/50 dark:text-violet-300",
+  import: "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
+  opening: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
+  price: "bg-orange-50 text-orange-800 dark:bg-orange-950/50 dark:text-orange-300",
+  edit: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
 };
 
 export async function fetchInventoryLog(params: Record<string, string | number | undefined>): Promise<InventoryLog> {

@@ -45,7 +45,7 @@ export function ReceiptCard({
     METHODS.find((m) => m.key === receipt.method)?.label ?? receipt.method;
   return (
     <div id="payment-receipt">
-      <Card className="mb-6 border-teal-300 bg-teal-50/50">
+      <Card className="mb-6 border-teal-300 bg-teal-50/50 dark:border-teal-700/60 dark:bg-teal-950/30">
         <div className="flex items-start justify-between">
           <div>
             <p className="hidden text-center text-lg font-bold text-zinc-900 print:block">
@@ -54,10 +54,10 @@ export function ReceiptCard({
             <p className="hidden text-center text-xs text-zinc-600 print:block">
               Premises Reg. No. {PREMISES_REG_NO}
             </p>
-            <h2 className="text-sm font-semibold text-teal-900 print:mt-2 print:text-zinc-900">
+            <h2 className="text-sm font-semibold text-teal-900 dark:text-teal-200 print:mt-2 print:text-zinc-900">
               {receipt.walkIn ? "Payment received — walk-in sale" : "Payment received — visit closed"}
             </h2>
-            <p className="mt-1 text-xs text-teal-700">
+            <p className="mt-1 text-xs text-teal-700 dark:text-teal-300/80">
               {receipt.patient}
               {receipt.mrn ? ` (${receipt.mrn})` : ""} ·{" "}
               {receipt.at.toLocaleTimeString()} · {methodLabel}
@@ -74,7 +74,7 @@ export function ReceiptCard({
             </Button>
           </div>
         </div>
-        <ul className="mt-3 flex flex-col gap-1 text-sm text-zinc-700">
+        <ul className="mt-3 flex flex-col gap-1 text-sm text-zinc-700 dark:text-zinc-200">
           {receipt.items.map((item, i) => (
             <li key={i} className="flex justify-between">
               <span>
@@ -83,7 +83,7 @@ export function ReceiptCard({
               <span>{money(item.quantity * item.unitPrice)}</span>
             </li>
           ))}
-          <li className="mt-1 flex justify-between border-t border-teal-200 pt-2 font-semibold">
+          <li className="mt-1 flex justify-between border-t border-teal-200 dark:border-teal-800/80 pt-2 font-semibold">
             <span>Total paid</span>
             <span>{money(receipt.total)}</span>
           </li>

@@ -214,6 +214,7 @@ export default function SalesPage() {
           <option value="card">Card</option>
         </select>
         <input
+          aria-label="Search sales by customer, medicine or code"
           className={cn(inputClass, "h-8 w-56 text-xs")}
           placeholder="Search customer, medicine, code…"
           value={query}
@@ -224,14 +225,14 @@ export default function SalesPage() {
         </Button>
       </Card>
 
-      <Card className="p-0">
-        <div className="border-b border-zinc-100 px-4 py-2.5 text-xs text-zinc-500">
+      <Card className="overflow-hidden p-0">
+        <div className="border-b border-border px-4 py-2.5 text-xs text-muted-foreground">
           {filtered.length} sale{filtered.length === 1 ? "" : "s"} ·{" "}
           {money(filtered.reduce((s, x) => s + x.medicineTotal, 0))} in medicine
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[860px] text-left text-sm">
-            <thead className="bg-zinc-50 text-xs text-zinc-500">
+            <thead className="bg-muted/50 text-xs text-muted-foreground">
               <tr>
                 <th className="py-2 pl-4 font-semibold">When</th>
                 <th className="py-2 font-semibold">Source</th>
@@ -242,7 +243,7 @@ export default function SalesPage() {
                 <th className="py-2 pr-4 font-semibold">Cashier</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100">
+            <tbody className="divide-y divide-border">
               {filtered.slice(0, shown).map((s) => {
                 const isOpen = open === s.visit.id;
                 return (
@@ -250,14 +251,13 @@ export default function SalesPage() {
                     <tr
                       className="cursor-pointer hover:bg-teal-50/40"
                       onClick={() => setOpen(isOpen ? null : s.visit.id)}
-                      aria-expanded={isOpen}
                     >
                       <td className="whitespace-nowrap py-2.5 pl-4 text-xs text-zinc-500">{exportDateTime(s.at)}</td>
                       <td className="py-2.5">
                         <SourceBadge walkIn={s.walkIn} />
                       </td>
                       <td className="py-2.5">
-                        <span className="font-medium text-zinc-900">{s.customer}</span>
+                        <button type="button" aria-expanded={isOpen} aria-label={`${isOpen ? "Hide" : "View"} sale details for ${s.customer}`} className="rounded px-1 py-1 text-left font-medium text-zinc-900 hover:text-teal-700" onClick={(event) => { event.stopPropagation(); setOpen(isOpen ? null : s.visit.id); }}>{s.customer}</button>
                         {s.mrn && <span className="ml-1.5 font-mono text-[10px] text-zinc-400">{s.mrn}</span>}
                       </td>
                       <td className="max-w-xs truncate py-2.5 text-xs text-zinc-600">
@@ -345,15 +345,15 @@ function Summary({
   tone: "teal" | "sky" | "violet";
 }) {
   const tones = {
-    teal: "border-teal-200 bg-white",
-    sky: "border-sky-200 bg-sky-50/50",
-    violet: "border-violet-200 bg-violet-50/50",
+    teal: "border-t-teal-600",
+    sky: "border-t-sky-500",
+    violet: "border-t-violet-500",
   };
   return (
-    <div className={cn("rounded-2xl border p-4", tones[tone])}>
-      <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">{label}</p>
-      <p className="mt-1 text-2xl font-bold tracking-tight text-zinc-900">{money(value)}</p>
-      <p className="text-xs text-zinc-500">
+    <div className={cn("rounded-xl border border-border border-t-2 bg-card p-5 shadow-sm", tones[tone])}>
+      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-1 text-2xl font-bold tracking-tight text-foreground">{money(value)}</p>
+      <p className="text-xs text-muted-foreground">
         {count} sale{count === 1 ? "" : "s"}
       </p>
     </div>
@@ -370,13 +370,13 @@ function Segmented<T extends string>({
   options: readonly (readonly [T, string])[];
 }) {
   return (
-    <div className="flex rounded-lg border border-zinc-200 bg-white p-0.5 text-xs font-medium">
+    <div className="flex rounded-lg border border-border bg-muted/50 p-0.5 text-xs font-medium">
       {options.map(([key, label]) => (
         <button
           key={key}
           onClick={() => onChange(key)}
           aria-pressed={value === key}
-          className={cn("rounded-md px-2.5 py-1", value === key ? "bg-teal-700 text-white" : "text-zinc-600 hover:bg-zinc-50")}
+          className={cn("rounded-md px-2.5 py-1 transition-colors", value === key ? "bg-teal-700 text-white" : "text-muted-foreground hover:bg-card hover:text-foreground")}
         >
           {label}
         </button>

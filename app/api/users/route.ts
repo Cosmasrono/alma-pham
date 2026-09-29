@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import * as repo from "@/lib/server/clinic-repo";
 import { getSession } from "@/lib/auth/session";
 import { canView, hasPermission } from "@/lib/auth/roles";
-import { mailConfigured, sendCredentialsEmail } from "@/lib/server/mail";
+import { mailConfigured, sendAccountSetupEmail } from "@/lib/server/mail";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,49 +33,27 @@ export async function POST(req: Request) {
   if (!(await ensureCanManageUsers())) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+  if (!mailConfigured()) {
+    return NextResponse.json({ error: "Configure outgoing email before inviting staff." }, { status: 503 });
+  }
   const body = await req.json();
   const result = await repo.createUser(body);
-  if ("error" in result) {
-    return NextResponse.json(result, { status: 400 });
-  }
-
-  // Email the new account its sign-in details. Failing to send must not undo
-  // the account, so problems come back as a warning the admin can act on.
+  if ("error" in result) return NextResponse.json(result, { status: 400 });
   let warning: string | undefined;
-  if (result.user.email) {
-    if (!mailConfigured()) {
-      warning =
-        "User was created, but email is not configured, so the sign-in details were not sent.";
-    } else {
-      try {
-        // A setup token lets them pick their own password straight from the
-        // email; the temporary password is the fallback if it lapses.
-        const reset = await repo.createPasswordReset(
-          result.user.email,
-          repo.SETUP_TTL_MS,
-        );
-        const origin = process.env.APP_URL ?? new URL(req.url).origin;
-        await sendCredentialsEmail({
-          to: result.user.email,
-          name: result.user.name,
-          username: result.user.username,
-          password: result.tempPassword,
-          setupLink: new URL(
-            reset
-              ? `/reset-password?token=${reset.token}`
-              : "/forgot-password",
-            origin,
-          ).toString(),
-        });
-      } catch (err) {
-        console.error("credentials email failed", err);
-        warning =
-          "User was created, but we could not email the sign-in details.";
-      }
-    }
+  try {
+    await sendSetupLink(result.user, req);
+  } catch {
+    warning = "Account created, but the invitation could not be sent. Use Send setup link to retry.";
   }
-
   return NextResponse.json({ users: await repo.listUsers(), warning });
+}
+
+async function sendSetupLink(user: { email: string | null; name: string; username: string }, req: Request) {
+  if (!user.email) throw new Error("User has no email address.");
+  const reset = await repo.createPasswordReset(user.email, repo.SETUP_TTL_MS);
+  if (!reset) throw new Error("Could not create a setup link.");
+  const link = new URL(`/reset-password?mode=setup&token=${reset.token}`, process.env.APP_URL ?? new URL(req.url).origin).toString();
+  await sendAccountSetupEmail({ to: user.email, name: user.name, username: user.username, link });
 }
 
 export async function PATCH(req: Request) {
@@ -83,6 +61,18 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   const body = await req.json();
+  if (body.action === "send-setup-link") {
+    if (!mailConfigured()) return NextResponse.json({ error: "Outgoing email is not configured." }, { status: 503 });
+    if (typeof body.id !== "string" || !/^[a-f0-9]{24}$/i.test(body.id)) return NextResponse.json({ error: "Invalid user." }, { status: 400 });
+    const user = await repo.getUserById(body.id);
+    if (!user?.active || !user.email) return NextResponse.json({ error: "The user must be active and have an email address." }, { status: 400 });
+    try {
+      await sendSetupLink(user, req);
+      return NextResponse.json({ ok: true });
+    } catch {
+      return NextResponse.json({ error: "Could not send the setup email. Please retry." }, { status: 502 });
+    }
+  }
   const result = await repo.updateUser(body);
   if ("error" in result) {
     return NextResponse.json(result, { status: 400 });

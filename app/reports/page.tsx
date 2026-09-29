@@ -833,40 +833,40 @@ export default function ReportsPage() {
                     className="fixed inset-0 z-40 cursor-default"
                     onClick={() => setMenuOpen(false)}
                   />
-                  <div className="absolute right-0 z-50 mt-2 w-72 origin-top-right overflow-hidden rounded-2xl border border-teal-950/10 bg-white p-1.5 shadow-2xl shadow-teal-950/20 animate-in fade-in zoom-in-95">
+                  <div className="absolute right-0 z-50 mt-2 w-72 origin-top-right overflow-hidden rounded-2xl border border-border bg-card p-1.5 shadow-2xl shadow-black/20 animate-in fade-in zoom-in-95">
                     <div className="px-3 py-2">
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-teal-800">
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-teal-800 dark:text-teal-300">
                         CSV Data Export Center
                       </p>
-                      <p className="text-[11px] text-zinc-400">
+                      <p className="text-[11px] text-muted-foreground">
                         Export formatted datasets for spreadsheet analysis
                       </p>
                     </div>
 
                     <button
                       onClick={exportAll}
-                      className="group flex w-full items-center justify-between rounded-xl bg-teal-50/80 px-3 py-2.5 text-left text-xs font-semibold text-teal-900 transition-colors hover:bg-teal-100"
+                      className="group flex w-full items-center justify-between rounded-xl bg-teal-50/80 dark:bg-teal-950/60 px-3 py-2.5 text-left text-xs font-semibold text-teal-900 dark:text-teal-200 transition-colors hover:bg-teal-100 dark:hover:bg-teal-900/60"
                     >
                       <div className="flex items-center gap-2">
-                        <SparklesIcon className="size-4 text-teal-700" />
+                        <SparklesIcon className="size-4 text-teal-700 dark:text-teal-400" />
                         <span>Consolidated Master CSV</span>
                       </div>
-                      <span className="rounded-full bg-teal-200/60 px-2 py-0.5 text-[10px] font-medium text-teal-900">
+                      <span className="rounded-full bg-teal-200/60 dark:bg-teal-900/60 px-2 py-0.5 text-[10px] font-medium text-teal-900 dark:text-teal-300">
                         All 8 Datasets
                       </span>
                     </button>
 
-                    <div className="my-1.5 border-t border-zinc-100" />
+                    <div className="my-1.5 border-t border-border" />
 
                     <div className="space-y-0.5">
                       {sections.map((s) => (
                         <button
                           key={s.key}
                           onClick={() => exportOne(s.key)}
-                          className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs text-zinc-700 transition-colors hover:bg-teal-50 hover:text-teal-950"
+                          className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs text-foreground transition-colors hover:bg-teal-50 dark:hover:bg-teal-950/50 hover:text-teal-950 dark:hover:text-teal-300"
                         >
                           <span>{s.label}</span>
-                          <ArrowUpRightIcon className="size-3 text-zinc-400" />
+                          <ArrowUpRightIcon className="size-3 text-muted-foreground" />
                         </button>
                       ))}
                     </div>
@@ -881,15 +881,15 @@ export default function ReportsPage() {
               onClick={() => window.print()}
               className="h-9 gap-2 rounded-xl text-xs font-semibold"
             >
-              <PrinterIcon className="size-4 text-zinc-600" />
+              <PrinterIcon className="size-4 text-muted-foreground" />
               Print / PDF
             </Button>
           </div>
         </div>
 
-        <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-teal-950/10 bg-white p-3 shadow-xs sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-border bg-card p-3 shadow-xs sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="mr-1 hidden text-xs font-medium text-zinc-400 sm:inline">
+            <span className="mr-1 hidden text-xs font-medium text-muted-foreground sm:inline">
               Period:
             </span>
             {PRESETS.map((p) => (
@@ -899,8 +899,8 @@ export default function ReportsPage() {
                 className={cn(
                   "rounded-xl px-3 py-1.5 text-xs font-medium transition-all",
                   preset === p.key
-                    ? "bg-teal-800 text-white shadow-xs font-semibold"
-                    : "text-zinc-600 hover:bg-teal-50/70 hover:text-teal-900",
+                    ? "bg-teal-800 dark:bg-teal-700 text-white shadow-xs font-semibold"
+                    : "text-muted-foreground hover:bg-teal-50/70 dark:hover:bg-teal-950/50 hover:text-teal-900 dark:hover:text-teal-200",
                 )}
               >
                 {p.label}
@@ -909,15 +909,15 @@ export default function ReportsPage() {
           </div>
 
           <div className="flex items-center gap-2 self-end sm:self-auto">
-            <div className="flex items-center gap-1.5 rounded-xl bg-teal-50/70 px-3 py-1 text-xs font-medium text-teal-900 ring-1 ring-teal-600/15">
-              <CalendarIcon className="size-3.5 text-teal-700" />
+            <div className="flex items-center gap-1.5 rounded-xl bg-teal-50/70 dark:bg-teal-950/50 px-3 py-1 text-xs font-medium text-teal-900 dark:text-teal-300 ring-1 ring-teal-600/20">
+              <CalendarIcon className="size-3.5 text-teal-700 dark:text-teal-400" />
               <span>{label}</span>
             </div>
           </div>
         </div>
 
         {preset === "custom" && (
-          <div className="mt-3 flex flex-wrap items-end gap-3 rounded-2xl border border-teal-950/10 bg-white p-4 shadow-xs">
+          <div className="mt-3 flex flex-wrap items-end gap-3 rounded-2xl border border-border bg-card p-4 shadow-xs">
             <label className="flex flex-col gap-1 text-xs font-semibold text-zinc-700">
               <span>Start Date</span>
               <input
@@ -1025,42 +1025,42 @@ export default function ReportsPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-teal-950/10 bg-white p-4.5 shadow-xs">
+            <div className="rounded-2xl border border-border bg-card p-4.5 shadow-xs">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+                <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Patient Encounters
                 </span>
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-50 text-sky-700">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300">
                   <UsersIcon className="size-4" />
                 </span>
               </div>
               <div className="mt-2 flex items-baseline gap-2">
-                <p className="text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">
+                <p className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                   {report.visits.length}
                 </p>
-                <span className="text-xs font-semibold text-emerald-700">
+                <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
                   {report.completedCount} completed ({Math.round(report.visitCompletionRate)}%)
                 </span>
               </div>
-              <div className="mt-3 flex items-center justify-between border-t border-zinc-100 pt-2 text-xs text-zinc-500">
+              <div className="mt-3 flex items-center justify-between border-t border-border pt-2 text-xs text-muted-foreground">
                 <span>New: {report.newPatients.length} registered</span>
-                <span className="font-medium text-zinc-700">
+                <span className="font-medium text-foreground">
                   Avg: {report.avgDuration ? formatDuration(report.avgDuration) : "—"}
                 </span>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-teal-950/10 bg-white p-4.5 shadow-xs">
+            <div className="rounded-2xl border border-border bg-card p-4.5 shadow-xs">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+                <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Clinical Orders
                 </span>
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-50 text-purple-700">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300">
                   <ActivityIcon className="size-4" />
                 </span>
               </div>
               <div className="mt-2 flex items-baseline gap-2">
-                <p className="text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">
+                <p className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                   {report.orders.length}
                 </p>
                 <span className="text-xs font-semibold text-purple-700">
@@ -1282,16 +1282,16 @@ export default function ReportsPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="flex items-center gap-3.5 rounded-2xl border border-teal-950/10 bg-white p-4 shadow-xs">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-800">
+            <div className="flex items-center gap-3.5 rounded-2xl border border-border bg-card p-4 shadow-xs">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300">
                 <StethoscopeIcon className="size-5" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium text-zinc-500">Top Attributed Doctor</p>
-                <p className="truncate text-sm font-bold text-zinc-900">
+                <p className="text-xs font-medium text-muted-foreground">Top Attributed Doctor</p>
+                <p className="truncate text-sm font-bold text-foreground">
                   {report.doctorRows[0]?.name ?? "No consultations"}
                 </p>
-                <p className="text-xs text-teal-700">
+                <p className="text-xs text-teal-700 dark:text-teal-400">
                   {report.doctorRows[0]
                     ? `${report.doctorRows[0].visits} visits · ${money(report.doctorRows[0].revenue)}`
                     : "No data"}
@@ -1299,16 +1299,16 @@ export default function ReportsPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3.5 rounded-2xl border border-teal-950/10 bg-white p-4 shadow-xs">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-800">
+            <div className="flex items-center gap-3.5 rounded-2xl border border-border bg-card p-4 shadow-xs">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300">
                 <FlameIcon className="size-5" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium text-zinc-500">Top Requested Service</p>
-                <p className="truncate text-sm font-bold text-zinc-900">
+                <p className="text-xs font-medium text-muted-foreground">Top Requested Service</p>
+                <p className="truncate text-sm font-bold text-foreground">
                   {report.services[0]?.title ?? "No orders recorded"}
                 </p>
-                <p className="text-xs text-purple-700">
+                <p className="text-xs text-purple-700 dark:text-purple-300">
                   {report.services[0]
                     ? `${report.services[0].ordered} orders · ${money(report.services[0].revenue)}`
                     : "No data"}
@@ -1316,16 +1316,16 @@ export default function ReportsPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3.5 rounded-2xl border border-red-200 bg-red-50/40 p-4 shadow-xs">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-700">
+            <div className="flex items-center gap-3.5 rounded-2xl border border-red-200 dark:border-red-900/50 bg-red-50/40 dark:bg-red-950/30 p-4 shadow-xs">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-100 dark:bg-red-900/60 text-red-700 dark:text-red-300">
                 <PackageCheckIcon className="size-5" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium text-red-800">Stock Reorder Alerts</p>
-                <p className="text-sm font-bold text-red-950">
+                <p className="text-xs font-medium text-red-800 dark:text-red-300">Stock Reorder Alerts</p>
+                <p className="text-sm font-bold text-red-950 dark:text-red-200">
                   {report.lowStock.length + report.outOfStock.length} Items Need Attention
                 </p>
-                <p className="text-xs text-red-700">
+                <p className="text-xs text-red-700 dark:text-red-400">
                   {report.outOfStock.length} out of stock · {report.lowStock.length} low
                 </p>
               </div>
@@ -1338,36 +1338,36 @@ export default function ReportsPage() {
         <div className="space-y-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Card className="p-4.5">
-              <span className="text-xs font-semibold text-zinc-500 uppercase">Gross Revenue Collected</span>
-              <p className="mt-1 text-2xl font-bold text-teal-950">{money(report.revenue)}</p>
-              <p className="mt-1 text-xs text-zinc-400">Total settled patient invoices</p>
+              <span className="text-xs font-semibold text-muted-foreground uppercase">Gross Revenue Collected</span>
+              <p className="mt-1 text-2xl font-bold text-teal-950 dark:text-teal-300">{money(report.revenue)}</p>
+              <p className="mt-1 text-xs text-muted-foreground">Total settled patient invoices</p>
             </Card>
             <Card className="p-4.5">
-              <span className="text-xs font-semibold text-zinc-500 uppercase">Average Revenue / Paid Visit</span>
-              <p className="mt-1 text-2xl font-bold text-zinc-900">{money(report.avgRevenuePerVisit)}</p>
-              <p className="mt-1 text-xs text-zinc-400">Across {report.paidVisits} paid encounters</p>
+              <span className="text-xs font-semibold text-muted-foreground uppercase">Average Revenue / Paid Visit</span>
+              <p className="mt-1 text-2xl font-bold text-foreground">{money(report.avgRevenuePerVisit)}</p>
+              <p className="mt-1 text-xs text-muted-foreground">Across {report.paidVisits} paid encounters</p>
             </Card>
             <Card className="p-4.5">
-              <span className="text-xs font-semibold text-zinc-500 uppercase">Total Potential Billing</span>
-              <p className="mt-1 text-2xl font-bold text-zinc-900">{money(report.revenue + report.outstanding)}</p>
-              <p className="mt-1 text-xs text-emerald-700 font-medium">{Math.round(report.collectionRate)}% Collection Rate</p>
+              <span className="text-xs font-semibold text-muted-foreground uppercase">Total Potential Billing</span>
+              <p className="mt-1 text-2xl font-bold text-foreground">{money(report.revenue + report.outstanding)}</p>
+              <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-400 font-medium">{Math.round(report.collectionRate)}% Collection Rate</p>
             </Card>
           </div>
 
           <Card className="p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-base font-bold text-zinc-900">
+                <h2 className="text-base font-bold text-foreground">
                   Payments & Collections Register
                 </h2>
-                <p className="text-xs text-zinc-500">
+                <p className="text-xs text-muted-foreground">
                   Audit log of every transaction received in this reporting period
                 </p>
               </div>
 
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 {/* Source filter: in-house (clinic) vs community (walk-in) */}
-                <div className="flex rounded-lg border border-zinc-200 bg-white p-0.5 text-[11px] font-medium">
+                <div className="flex rounded-lg border border-border bg-muted/50 p-0.5 text-[11px] font-medium">
                   {(
                     [
                       ["all", "All"],
@@ -1383,7 +1383,7 @@ export default function ReportsPage() {
                         "rounded-md px-2.5 py-1 transition-colors",
                         takingsSource === key
                           ? "bg-teal-700 text-white"
-                          : "text-zinc-600 hover:bg-zinc-50",
+                          : "text-muted-foreground hover:bg-card hover:text-foreground",
                       )}
                     >
                       {label}
@@ -1392,7 +1392,7 @@ export default function ReportsPage() {
                 </div>
 
                 <div className="relative w-full sm:w-64">
-                  <SearchIcon className="absolute left-3 top-2.5 size-4 text-zinc-400" />
+                  <SearchIcon className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
                   <input
                     type="text"
                     placeholder="Search patient, ref, method..."

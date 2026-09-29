@@ -25,11 +25,11 @@ export function batchesOf(batches: MedicineBatch[], medicineId: ID): MedicineBat
 }
 
 function expiryStyle(days: number | null) {
-  if (days === null) return { label: "No expiry recorded", cls: "bg-zinc-100 text-zinc-500" };
-  if (days <= 0) return { label: "Expired", cls: "bg-red-100 text-red-700" };
-  if (days <= 30) return { label: `${days}d left`, cls: "bg-red-50 text-red-700" };
-  if (days <= 90) return { label: `${days}d left`, cls: "bg-amber-50 text-amber-800" };
-  return { label: new Date(Date.now() + days * DAY_MS).toISOString().slice(0, 10), cls: "bg-teal-50 text-teal-800" };
+  if (days === null) return { label: "No expiry recorded", cls: "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400" };
+  if (days <= 0) return { label: "Expired", cls: "bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-900/60" };
+  if (days <= 30) return { label: `${days}d left`, cls: "bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-900/50" };
+  if (days <= 90) return { label: `${days}d left`, cls: "bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-900/50" };
+  return { label: new Date(Date.now() + days * DAY_MS).toISOString().slice(0, 10), cls: "bg-teal-50 dark:bg-teal-950/50 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-900/50" };
 }
 
 /** Book a delivery in and list what is already on the shelf for this medicine. */
@@ -76,8 +76,8 @@ export function StockBatchesPanel({ medicine }: { medicine: Medicine }) {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border border-zinc-200 p-3">
-        <p className="mb-2 text-xs font-bold text-zinc-700">Receive a delivery</p>
+      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 p-3">
+        <p className="mb-2 text-xs font-bold text-zinc-700 dark:text-zinc-300">Receive a delivery</p>
         <div className="grid grid-cols-2 gap-2">
           <Field label="Units received">
             <input
@@ -118,8 +118,8 @@ export function StockBatchesPanel({ medicine }: { medicine: Medicine }) {
             />
           </Field>
         </div>
-        {error && <p className="mt-2 rounded bg-red-50 p-2 text-xs text-red-700">{error}</p>}
-        {saved && <p className="mt-2 rounded bg-teal-50 p-2 text-xs text-teal-800">{saved}</p>}
+        {error && <p className="mt-2 rounded bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900/50 p-2 text-xs text-red-700 dark:text-red-300">{error}</p>}
+        {saved && <p className="mt-2 rounded bg-teal-50 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-900/50 p-2 text-xs text-teal-800 dark:text-teal-300">{saved}</p>}
         <Button
           type="button"
           size="sm"
@@ -132,25 +132,25 @@ export function StockBatchesPanel({ medicine }: { medicine: Medicine }) {
       </div>
 
       <div>
-        <p className="mb-1 text-xs font-bold text-zinc-700">
+        <p className="mb-1 text-xs font-bold text-zinc-700 dark:text-zinc-300">
           On the shelf ({batches.length} batch{batches.length === 1 ? "" : "es"})
         </p>
         {batches.length === 0 ? (
-          <p className="rounded-lg bg-zinc-50 px-3 py-3 text-xs text-zinc-500">
+          <p className="rounded-lg bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800 px-3 py-3 text-xs text-zinc-500 dark:text-zinc-400">
             No batches recorded. Until a delivery is received here, the counter sells against the
             plain stock count with no expiry checks.
           </p>
         ) : (
-          <ul className="divide-y divide-zinc-100 text-xs">
+          <ul className="divide-y divide-zinc-100 dark:divide-zinc-800 text-xs">
             {batches.map((b) => {
               const days = daysLeft(b);
               const style = expiryStyle(days);
               return (
                 <li key={b.id} className="flex items-center justify-between gap-2 py-2">
                   <span>
-                    <strong className="tabular-nums">{b.quantity}</strong> units
+                    <strong className="tabular-nums text-foreground">{b.quantity}</strong> units
                     {b.batchNumber ? ` · batch ${b.batchNumber}` : ""}
-                    <span className="block text-[11px] text-zinc-400">
+                    <span className="block text-[11px] text-zinc-400 dark:text-zinc-500">
                       received {new Date(b.receivedAt).toLocaleDateString()}
                       {b.receivedBy ? ` by ${b.receivedBy}` : ""}
                     </span>
@@ -160,7 +160,7 @@ export function StockBatchesPanel({ medicine }: { medicine: Medicine }) {
                       {style.label}
                     </span>
                     <button
-                      className="text-[11px] text-rose-700 underline"
+                      className="text-[11px] text-rose-700 dark:text-rose-400 hover:underline"
                       onClick={() => void writeOff(b)}
                     >
                       Write off

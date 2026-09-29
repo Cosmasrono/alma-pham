@@ -63,11 +63,11 @@ export default function FlowPage() {
 
       {open.length > 0 && (
         <div className="mb-4 flex flex-wrap items-center gap-2 text-xs">
-          <span className="rounded-full border border-zinc-200 bg-white px-2.5 py-1 font-medium text-zinc-600">
+          <span className="rounded-full border border-border bg-card px-2.5 py-1 font-medium text-muted-foreground">
             {open.length} in clinic
           </span>
           {longest && (
-            <span className="rounded-full border border-zinc-200 bg-white px-2.5 py-1 font-medium text-zinc-600">
+            <span className="rounded-full border border-border bg-card px-2.5 py-1 font-medium text-muted-foreground">
               longest stay {formatDuration(longest.timing.totalMs)}
             </span>
           )}
@@ -86,10 +86,10 @@ export default function FlowPage() {
             // The whole card takes the stay colour, so long-stayers pop.
             const tone =
               timing.totalMs >= VERY_LONG_STAY_MS
-                ? "border-red-200 bg-red-50/60"
+                ? "border-red-200 dark:border-red-900/60 bg-red-50/60 dark:bg-red-950/30"
                 : timing.totalMs >= LONG_STAY_MS
-                  ? "border-amber-200 bg-amber-50/60"
-                  : "border-teal-950/[0.07] bg-white";
+                  ? "border-amber-200 dark:border-amber-900/60 bg-amber-50/60 dark:bg-amber-950/30"
+                  : "border-border bg-card";
             return (
               <div
                 key={visit.id}
@@ -99,10 +99,10 @@ export default function FlowPage() {
                 )}
               >
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium text-zinc-800">
+                  <span className="font-medium text-foreground">
                     {patientName(patient)}
                   </span>
-                  <span className="font-mono text-xs text-zinc-500">
+                  <span className="font-mono text-xs text-muted-foreground">
                     {patient?.mrn ?? ""}
                   </span>
                   <LocationBadge location={visitLocation(data, visit)} />
@@ -110,7 +110,7 @@ export default function FlowPage() {
                     <PriorityBadge priority={visit.priority} />
                   )}
                   <StayBadge timing={timing} />
-                  <span className="ml-auto text-xs text-zinc-500">
+                  <span className="ml-auto text-xs text-muted-foreground">
                     {doctorName(doctor)}
                   </span>
                 </div>
@@ -123,13 +123,13 @@ export default function FlowPage() {
 
       {completedToday.length > 0 && (
         <>
-          <h2 className="mb-3 mt-8 text-sm font-semibold text-zinc-700">
+          <h2 className="mb-3 mt-8 text-sm font-semibold text-foreground">
             Completed today ({completedToday.length})
           </h2>
-          <div className="overflow-hidden rounded-2xl border border-teal-950/[0.07] bg-white shadow-sm">
+          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-zinc-50 text-left text-xs uppercase tracking-wide text-zinc-500">
+                <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
                   <tr>
                     <th className="px-4 py-2.5 font-medium">Patient</th>
                     <th className="px-4 py-2.5 font-medium">Doctor</th>
@@ -145,19 +145,19 @@ export default function FlowPage() {
                       ? dmap.get(visit.assignedDoctorId)
                       : undefined;
                     return (
-                      <tr key={visit.id} className="border-t border-zinc-100">
+                      <tr key={visit.id} className="border-t border-border">
                         <td className="px-4 py-2.5">
-                          <span className="font-medium text-zinc-800">
+                          <span className="font-medium text-foreground">
                             {patientName(patient)}
                           </span>{" "}
-                          <span className="font-mono text-xs text-zinc-500">
+                          <span className="font-mono text-xs text-muted-foreground">
                             {patient?.mrn ?? ""}
                           </span>
                         </td>
-                        <td className="px-4 py-2.5 text-zinc-600">
+                        <td className="px-4 py-2.5 text-muted-foreground">
                           {doctorName(doctor)}
                         </td>
-                        <td className="px-4 py-2.5 tabular-nums text-zinc-600">
+                        <td className="px-4 py-2.5 tabular-nums text-muted-foreground">
                           {formatDuration(timing.totalMs)}
                         </td>
                       </tr>

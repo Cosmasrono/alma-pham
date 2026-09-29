@@ -6,6 +6,7 @@ import { SessionProvider } from "@/components/SessionProvider";
 import { SessionLockGate } from "@/components/SessionLockGate";
 import { SystemLockGate } from "@/components/SystemLockGate";
 import { Toaster } from "@/components/Toaster";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { getSession } from "@/lib/auth/session";
 
 const geistSans = Geist({
@@ -45,13 +46,22 @@ export default async function RootLayout({
       // hydration warning on every page.
       suppressHydrationWarning
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('careflow_theme')||'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d){document.documentElement.classList.add('dark');}}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
-        <SessionProvider value={session}>
-          <AppShell>{children}</AppShell>
-          <SessionLockGate />
-          <SystemLockGate />
-          <Toaster />
-        </SessionProvider>
+        <ThemeProvider>
+          <SessionProvider value={session}>
+            <AppShell>{children}</AppShell>
+            <SessionLockGate />
+            <SystemLockGate />
+            <Toaster />
+          </SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

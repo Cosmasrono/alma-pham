@@ -71,16 +71,16 @@ export default function WalkInPage() {
         }
       />
 
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-zinc-200 bg-white px-4 py-3">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
         {shift ? (
-          <p className="text-sm text-zinc-600">
+          <p className="text-sm text-muted-foreground">
             Till open since{" "}
-            <strong>{new Date(shift.openedAt).toLocaleTimeString()}</strong> · float{" "}
-            <strong>{money(shift.openingCash)}</strong> · cash taken{" "}
-            <strong className="text-teal-700">{money(shift.totalCashSales)}</strong>
+            <strong className="text-foreground">{new Date(shift.openedAt).toLocaleTimeString()}</strong> · float{" "}
+            <strong className="text-foreground">{money(shift.openingCash)}</strong> · cash taken{" "}
+            <strong className="text-teal-700 dark:text-teal-400">{money(shift.totalCashSales)}</strong>
           </p>
         ) : (
-          <p className="text-sm text-amber-800">
+          <p className="text-sm text-amber-800 dark:text-amber-300">
             No till open. You can still sell — open one to reconcile your cash at the end.
           </p>
         )}
@@ -183,36 +183,36 @@ function Counter({ onPaid }: { onPaid: (r: Receipt) => void }) {
   return (
     <div className="grid grid-cols-1 items-start gap-6 pb-24 lg:grid-cols-[minmax(0,1fr)_360px] lg:pb-0 xl:grid-cols-[minmax(0,1fr)_400px]">
       <section id="medicine-catalogue" aria-label="Medicine catalogue" className="min-w-0 space-y-4 scroll-mt-6">
-        <div className="rounded-2xl border border-zinc-200 bg-white p-4">
-        <label htmlFor="medicine-search" className="mb-2 block text-sm font-semibold text-zinc-800">Find a medicine</label>
+        <div className="rounded-2xl border border-border bg-card p-4">
+        <label htmlFor="medicine-search" className="mb-2 block text-sm font-semibold text-foreground">Find a medicine</label>
         <div className="relative">
-        <Search aria-hidden="true" className="pointer-events-none absolute left-3.5 top-3.5 size-5 text-zinc-400" />
+        <Search aria-hidden="true" className="pointer-events-none absolute left-3.5 top-3.5 size-5 text-muted-foreground" />
         <input
           id="medicine-search"
           ref={searchRef}
-          className="h-12 w-full rounded-xl border border-zinc-200 bg-zinc-50 pl-11 pr-11 text-base text-zinc-900 placeholder:text-zinc-500 focus:border-teal-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-600/20"
+          className="h-12 w-full rounded-xl border border-border bg-zinc-50 dark:bg-zinc-900 pl-11 pr-11 text-base text-foreground placeholder:text-muted-foreground focus:border-teal-600 focus:bg-white dark:focus:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
           placeholder="Name, generic name, or barcode"
           value={query}
           onChange={(e) => { setQuery(e.target.value); setVisibleCount(36); }}
           onKeyDown={onSearchKey}
           autoFocus
         />
-        <ScanBarcode aria-hidden="true" className="pointer-events-none absolute right-3.5 top-3.5 size-5 text-zinc-400" />
+        <ScanBarcode aria-hidden="true" className="pointer-events-none absolute right-3.5 top-3.5 size-5 text-muted-foreground" />
         </div>
         <div aria-label="Filter medicines" className="mt-3 flex flex-wrap gap-2">
           {[["all", "All medicines"], ["in-stock", "In stock"], ["tablet", "Tablets"], ["capsule", "Capsules"], ["syrup", "Syrups"]].map(([value, label]) => (
-            <button key={value} type="button" aria-pressed={filter === value} onClick={() => { setFilter(value); setVisibleCount(36); }} className={cn("min-h-9 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors", filter === value ? "border-teal-200 bg-teal-50 text-teal-800" : "border-transparent text-zinc-600 hover:bg-zinc-100")}>
+            <button key={value} type="button" aria-pressed={filter === value} onClick={() => { setFilter(value); setVisibleCount(36); }} className={cn("min-h-9 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors", filter === value ? "border-teal-300 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300" : "border-transparent text-muted-foreground hover:bg-muted")}>
               {label}
             </button>
           ))}
         </div>
         </div>
-        <div className="flex items-center justify-between text-xs text-zinc-600" aria-live="polite">
+        <div className="flex items-center justify-between text-xs text-muted-foreground" aria-live="polite">
           <span>{matches.length} {matches.length === 1 ? "medicine" : "medicines"}{q ? " found" : " available"}</span>
           <span>Select a medicine to add it</span>
         </div>
         {msg && (
-          <p role="status" className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">{msg}</p>
+          <p role="status" className="rounded-lg border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/40 px-3 py-2 text-sm text-amber-800 dark:text-amber-300">{msg}</p>
         )}
 
         <div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2 2xl:grid-cols-3">
@@ -226,29 +226,29 @@ function Counter({ onPaid }: { onPaid: (r: Receipt) => void }) {
                 onClick={() => addToCart(m)}
                 disabled={left <= 0}
                 aria-label={`Add ${medicineLabel(m)}, ${money(m.unitPrice)}${cart.has(m.id) ? `, ${cart.get(m.id)} in sale` : ""}`}
-                className={cn("group flex flex-col rounded-2xl border p-4 text-left transition-colors disabled:cursor-not-allowed disabled:bg-zinc-100", cart.has(m.id) ? "border-teal-500 bg-teal-50/60 ring-1 ring-teal-500/10" : "border-zinc-200 bg-white enabled:hover:border-teal-400 enabled:hover:bg-teal-50/30")}
+                className={cn("group flex flex-col rounded-2xl border p-4 text-left transition-colors disabled:cursor-not-allowed disabled:bg-zinc-100 dark:disabled:bg-zinc-900/50 disabled:opacity-50", cart.has(m.id) ? "border-teal-500 bg-teal-50/60 dark:bg-teal-950/40 ring-1 ring-teal-500/20" : "border-border bg-card enabled:hover:border-teal-400 dark:enabled:hover:border-teal-600 enabled:hover:bg-teal-50/30 dark:enabled:hover:bg-teal-950/20")}
               >
                 <div className="mb-3 flex w-full items-center justify-between gap-2">
-                  <span className="grid size-9 place-items-center rounded-xl bg-teal-50 text-teal-700"><Pill aria-hidden="true" className="size-4" /></span>
-                  {cart.has(m.id) && <span className="flex items-center gap-1 text-xs font-medium text-teal-800"><Check aria-hidden="true" className="size-3.5" />{cart.get(m.id)} in sale</span>}
+                  <span className="grid size-9 place-items-center rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300"><Pill aria-hidden="true" className="size-4" /></span>
+                  {cart.has(m.id) && <span className="flex items-center gap-1 text-xs font-medium text-teal-800 dark:text-teal-300"><Check aria-hidden="true" className="size-3.5" />{cart.get(m.id)} in sale</span>}
                 </div>
-                <div className="text-sm font-semibold leading-relaxed text-zinc-900">
+                <div className="text-sm font-semibold leading-relaxed text-foreground">
                   {medicineLabel(m)}
                 </div>
-                <div className="mt-1 text-xs leading-relaxed text-zinc-600">
+                <div className="mt-1 text-xs leading-relaxed text-muted-foreground">
                   {m.form}
                   {m.genericName ? ` · ${m.genericName}` : ""}
                 </div>
                 <div className="mt-auto flex w-full flex-wrap items-center justify-between gap-2 pt-4">
-                  <span className="text-base font-semibold tabular-nums text-teal-800">{money(m.unitPrice)}</span>
+                  <span className="text-base font-semibold tabular-nums text-teal-800 dark:text-teal-400">{money(m.unitPrice)}</span>
                   <span
                     className={cn(
                       "rounded-md px-2 py-1 text-xs font-medium",
                       left <= 0
-                        ? "bg-red-100 text-red-700"
+                        ? "bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300"
                         : left <= (m.reorderLevel ?? 10)
-                          ? "bg-amber-100 text-amber-800"
-                          : "bg-zinc-100 text-zinc-600",
+                          ? "bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300"
+                          : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400",
                     )}
                   >
                     {left <= 0 ? "Out of stock" : `${left} left`}
@@ -256,17 +256,17 @@ function Counter({ onPaid }: { onPaid: (r: Receipt) => void }) {
                 </div>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {m.requiresPrescription && (
-                    <span className="rounded bg-rose-50 px-1.5 py-1 text-xs font-medium text-rose-700">
+                    <span className="rounded bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/50 px-1.5 py-1 text-xs font-medium text-rose-700 dark:text-rose-300">
                       Rx only
                     </span>
                   )}
                   {expiringSoon && (
-                    <span className="rounded bg-orange-50 px-1.5 py-1 text-xs font-medium text-orange-700">
+                    <span className="rounded bg-orange-50 dark:bg-orange-950/50 border border-orange-200 dark:border-orange-900/50 px-1.5 py-1 text-xs font-medium text-orange-700 dark:text-orange-300">
                       {days! <= 0 ? "expired stock" : `expires in ${days}d`}
                     </span>
                   )}
                   {(m.expired ?? 0) > 0 && (
-                    <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-[10px] text-zinc-500">
+                    <span className="rounded bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 text-[10px] text-zinc-500 dark:text-zinc-400">
                       {m.expired} blocked
                     </span>
                   )}
@@ -275,10 +275,10 @@ function Counter({ onPaid }: { onPaid: (r: Receipt) => void }) {
             );
           })}
           {shelf.length === 0 && (
-            <div className="col-span-full rounded-2xl border border-dashed border-zinc-300 bg-white px-4 py-12 text-center">
-              <Search aria-hidden="true" className="mx-auto mb-3 size-6 text-zinc-400" />
-              <p className="text-sm font-semibold text-zinc-800">{data.medicines.length === 0 ? "No medicines on this shelf yet" : "No matching medicines"}</p>
-              <p className="mt-2 text-sm text-zinc-600">{data.medicines.length === 0 ? "Add stock to the medicine catalogue to start selling." : "Try another name or barcode, or change the filter."}</p>
+            <div className="col-span-full rounded-2xl border border-dashed border-border bg-card px-4 py-12 text-center">
+              <Search aria-hidden="true" className="mx-auto mb-3 size-6 text-muted-foreground" />
+              <p className="text-sm font-semibold text-foreground">{data.medicines.length === 0 ? "No medicines on this shelf yet" : "No matching medicines"}</p>
+              <p className="mt-2 text-sm text-muted-foreground">{data.medicines.length === 0 ? "Add stock to the medicine catalogue to start selling." : "Try another name or barcode, or change the filter."}</p>
               {(query || filter !== "all") && <Button variant="secondary" className="mt-4" onClick={() => { setQuery(""); setFilter("all"); }}>Clear search and filters</Button>}
             </div>
           )}
@@ -287,13 +287,13 @@ function Counter({ onPaid }: { onPaid: (r: Receipt) => void }) {
       </section>
 
       <section id="current-sale" aria-label="Current sale" tabIndex={-1} className="min-w-0 scroll-mt-6 lg:sticky lg:top-6">
-        <a href="#medicine-catalogue" className="mb-3 flex min-h-11 items-center gap-2 text-sm font-medium text-teal-800 lg:hidden"><ArrowUp aria-hidden="true" className="size-4" />Back to medicines</a>
+        <a href="#medicine-catalogue" className="mb-3 flex min-h-11 items-center gap-2 text-sm font-medium text-teal-800 dark:text-teal-400 lg:hidden"><ArrowUp aria-hidden="true" className="size-4" />Back to medicines</a>
         <Card className="flex flex-col overflow-hidden !p-0">
-          <div className="flex items-center justify-between gap-2 border-b border-zinc-200 bg-zinc-50/70 px-5 py-4">
-            <h2 className="flex items-center gap-2 text-base font-semibold"><ShoppingBag aria-hidden="true" className="size-5 text-teal-700" />Current sale <span className="rounded-md bg-white px-2 py-0.5 text-xs text-zinc-600">{cartLines.length}</span></h2>
+          <div className="flex items-center justify-between gap-2 border-b border-border bg-zinc-50/70 dark:bg-zinc-900/50 px-5 py-4">
+            <h2 className="flex items-center gap-2 text-base font-semibold"><ShoppingBag aria-hidden="true" className="size-5 text-teal-700 dark:text-teal-400" />Current sale <span className="rounded-md border border-border bg-card px-2 py-0.5 text-xs text-muted-foreground">{cartLines.length}</span></h2>
             {cartLines.length > 0 && (
               <button
-                className="min-h-11 px-2 text-sm font-medium text-rose-700 hover:underline"
+                className="min-h-11 px-2 text-sm font-medium text-rose-700 dark:text-rose-400 hover:underline"
                 onClick={() => setCart(new Map())}
               >
                 Clear
@@ -301,23 +301,23 @@ function Counter({ onPaid }: { onPaid: (r: Receipt) => void }) {
             )}
           </div>
 
-          <div className="max-h-[42vh] divide-y divide-zinc-100 overflow-y-auto">
+          <div className="min-h-0 max-h-[42vh] shrink overflow-y-auto divide-y divide-border">
             {cartLines.map(({ med, qty }) => (
               <div key={med.id} className="grid grid-cols-[1fr_auto] items-center gap-3 px-5 py-4">
                 <div className="col-span-2 min-w-0">
-                  <div className="text-sm font-medium leading-relaxed">{medicineLabel(med)}</div>
-                  <div className="mt-1 text-xs text-zinc-600">{money(med.unitPrice)} each</div>
+                  <div className="text-sm font-medium leading-relaxed text-foreground">{medicineLabel(med)}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">{money(med.unitPrice)} each</div>
                 </div>
                 <div className="flex items-center gap-1">
                   <button
-                    className="grid size-11 place-items-center rounded-lg border border-zinc-200 bg-white hover:bg-zinc-100"
+                    className="grid size-11 place-items-center rounded-lg border border-border bg-card hover:bg-muted text-foreground"
                     aria-label={`One less ${medicineLabel(med)}`}
                     onClick={() => setQty(med.id, qty - 1)}
                   >
                     <Minus aria-hidden="true" className="size-4" />
                   </button>
                   <input
-                    className="h-11 w-12 rounded-lg border border-zinc-200 text-center text-sm tabular-nums"
+                    className="h-11 w-12 rounded-lg border border-border bg-background text-foreground text-center text-sm tabular-nums"
                     inputMode="numeric"
                     value={qty}
                     aria-label={`Quantity of ${medicineLabel(med)}`}
@@ -326,7 +326,7 @@ function Counter({ onPaid }: { onPaid: (r: Receipt) => void }) {
                     }
                   />
                   <button
-                    className="grid size-11 place-items-center rounded-lg border border-zinc-200 bg-white hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="grid size-11 place-items-center rounded-lg border border-border bg-card hover:bg-muted text-foreground disabled:cursor-not-allowed disabled:opacity-40"
                     disabled={qty >= sellableOf(med)}
                     aria-label={`One more ${medicineLabel(med)}`}
                     onClick={() => addToCart(med)}
@@ -334,24 +334,24 @@ function Counter({ onPaid }: { onPaid: (r: Receipt) => void }) {
                     <Plus aria-hidden="true" className="size-4" />
                   </button>
                 </div>
-                <div className="text-right text-sm font-semibold tabular-nums">
+                <div className="text-right text-sm font-semibold tabular-nums text-foreground">
                   {money(qty * med.unitPrice)}
                 </div>
               </div>
             ))}
             {cartLines.length === 0 && (
               <div className="px-5 py-12 text-center">
-                <span className="mx-auto mb-4 grid size-12 place-items-center rounded-2xl bg-teal-50 text-teal-700"><ShoppingBag aria-hidden="true" className="size-6" /></span>
-                <p className="text-sm font-semibold text-zinc-800">Ready for your next customer</p>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-600">Select a medicine or scan a barcode to start a sale.</p>
+                <span className="mx-auto mb-4 grid size-12 place-items-center rounded-2xl bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300"><ShoppingBag aria-hidden="true" className="size-6" /></span>
+                <p className="text-sm font-semibold text-foreground">Ready for your next customer</p>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Select a medicine or scan a barcode to start a sale.</p>
               </div>
             )}
           </div>
 
-          <div className="space-y-4 border-t border-zinc-200 p-5">
+          <div className="shrink-0 space-y-4 border-t border-border bg-card p-5">
             {needsRx && (
-              <div className="rounded-xl border border-rose-200 bg-rose-50/60 p-3">
-                <p className="text-xs font-semibold text-rose-900">
+              <div className="rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/60 dark:bg-rose-950/40 p-3">
+                <p className="text-xs font-semibold text-rose-900 dark:text-rose-300">
                   Prescription-only: {rxLines.map((l) => medicineLabel(l.med)).join(", ")}
                 </p>
                 <div className="mt-2 grid gap-2">
@@ -395,9 +395,9 @@ function Counter({ onPaid }: { onPaid: (r: Receipt) => void }) {
               </Field>
             </div>
 
-            <div className="flex items-center justify-between gap-3 border-t border-zinc-100 pt-4 text-xl font-semibold">
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-teal-200/60 dark:border-teal-900/50 bg-teal-50/70 dark:bg-teal-950/40 p-4 text-xl font-semibold">
               <span>Total</span>
-              <span className="tabular-nums text-teal-700">{money(total)}</span>
+              <span className="tabular-nums text-teal-700 dark:text-teal-400">{money(total)}</span>
             </div>
             <Button
               className="w-full"
@@ -417,7 +417,7 @@ function Counter({ onPaid }: { onPaid: (r: Receipt) => void }) {
       </section>
 
       {cartLines.length > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-zinc-200 bg-white py-3 pl-4 pr-24 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_20px_rgb(0_0_0/0.05)] md:left-56 lg:hidden print:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 backdrop-blur-md py-3 pl-4 pr-24 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_20px_rgb(0_0_0/0.15)] md:left-56 lg:hidden print:hidden">
           <a href="#current-sale" className="flex min-h-12 items-center justify-between gap-3 rounded-xl bg-teal-700 px-4 py-2 text-sm font-semibold text-white">
             <span>View sale · {cartLines.length}</span><span className="tabular-nums">{money(total)}</span>
           </a>
@@ -468,10 +468,10 @@ function Modal({
     };
   }, []);
   return (
-    <dialog ref={dialogRef} aria-labelledby={titleId} onCancel={(event) => { event.preventDefault(); onClose(); }} className="fixed inset-0 m-auto max-h-[90dvh] w-[calc(100%_-_2rem)] max-w-md overflow-y-auto rounded-2xl border border-zinc-200 bg-white p-6 text-zinc-900 shadow-2xl backdrop:bg-teal-950/50 backdrop:backdrop-blur-sm">
+    <dialog ref={dialogRef} aria-labelledby={titleId} onCancel={(event) => { event.preventDefault(); onClose(); }} className="fixed inset-0 m-auto max-h-[90dvh] w-[calc(100%_-_2rem)] max-w-md overflow-y-auto rounded-2xl border border-border bg-card p-6 text-foreground shadow-2xl backdrop:bg-teal-950/70 backdrop:backdrop-blur-sm">
         <div className="mb-4 flex items-center justify-between">
           <h2 id={titleId} className="text-lg font-semibold tracking-tight">{title}</h2>
-          <button onClick={onClose} className="grid size-11 shrink-0 place-items-center rounded-xl text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800" aria-label="Close">
+          <button onClick={onClose} className="grid size-11 shrink-0 place-items-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="Close">
             <X aria-hidden="true" className="size-5" />
           </button>
         </div>
@@ -570,10 +570,10 @@ function PaymentModal({
               resetStk();
             }}
             className={cn(
-              "min-h-11 rounded-xl border py-2 text-sm font-medium",
+              "min-h-11 rounded-xl border py-2 text-sm font-medium transition-colors",
               method === m.key
-                ? "border-teal-600 bg-teal-50 text-teal-700"
-                : "border-zinc-200 hover:bg-zinc-50",
+                ? "border-teal-600 bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 ring-1 ring-teal-600/30"
+                : "border-border bg-card text-foreground hover:bg-muted",
             )}
           >
             {m.label}
@@ -598,7 +598,7 @@ function PaymentModal({
           </Field>
           <div className="flex justify-between text-sm">
             <span>Change due</span>
-            <strong className="tabular-nums text-teal-700">{money(change)}</strong>
+            <strong className="tabular-nums text-teal-700 dark:text-teal-400">{money(change)}</strong>
           </div>
         </div>
       )}
@@ -629,7 +629,7 @@ function PaymentModal({
       )}
 
       {shownError && (
-        <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{shownError}</p>
+        <p className="mt-3 rounded-lg border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 p-3 text-sm text-red-700 dark:text-red-300">{shownError}</p>
       )}
 
       {stkFlow && stk && (
@@ -753,13 +753,13 @@ function TillModal({ shift, onClose }: { shift: Shift | null; onClose: () => voi
                   : "Shortage"
             }
             value={balanced ? "" : money(Math.abs(result.cashShortageOverage ?? 0))}
-            className={balanced ? "text-teal-700 font-semibold" : "text-rose-700 font-semibold"}
+            className={balanced ? "text-teal-700 dark:text-teal-400 font-semibold" : "text-rose-700 dark:text-rose-400 font-semibold"}
           />
-          <div className="border-t border-zinc-100 pt-2" />
+          <div className="border-t border-border pt-2" />
           <Row label="M-Pesa recorded on sales" value={money(result.totalMpesaSales)} />
           <Row label="Card" value={money(result.totalCardSales)} />
           {result.status === "discrepancy" && (
-            <p className="mt-2 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700">
+            <p className="mt-2 rounded-lg border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/40 px-3 py-2 text-xs text-rose-700 dark:text-rose-300">
               This till was flagged with a discrepancy. A manager can review it under
               Reconciliation.
             </p>
@@ -774,21 +774,21 @@ function TillModal({ shift, onClose }: { shift: Shift | null; onClose: () => voi
 
   return (
     <Modal title={shift ? "Close till" : "Open till"} onClose={onClose}>
-      {error && <p className="mb-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+      {error && <p className="mb-3 rounded-lg border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 p-3 text-sm text-red-700 dark:text-red-300">{error}</p>}
       {shift ? (
         <div className="space-y-3">
-          <p className="text-sm text-zinc-500">
-            Cash sales this session: <strong>{money(shift.totalCashSales)}</strong> · opening float{" "}
-            <strong>{money(shift.openingCash)}</strong>
+          <p className="text-sm text-muted-foreground">
+            Cash sales this session: <strong className="text-foreground">{money(shift.totalCashSales)}</strong> · opening float{" "}
+            <strong className="text-foreground">{money(shift.openingCash)}</strong>
           </p>
           <div>
-            <label className="mb-1 block text-xs font-semibold text-zinc-700">
+            <label className="mb-1 block text-xs font-semibold text-foreground">
               Count the cash in the drawer
             </label>
             <div className="grid grid-cols-3 gap-2">
               {DENOMINATIONS.map((d) => (
                 <div key={d} className="flex items-center gap-1.5">
-                  <span className="w-10 shrink-0 text-right text-xs text-zinc-500">{d} ×</span>
+                  <span className="w-10 shrink-0 text-right text-xs text-muted-foreground">{d} ×</span>
                   <input
                     type="number"
                     min="0"

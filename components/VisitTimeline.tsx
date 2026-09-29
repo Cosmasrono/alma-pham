@@ -31,7 +31,7 @@ export function VisitTimeline({ visit }: { visit: Visit }) {
   const timeline = visit.timeline ?? [];
   if (timeline.length === 0) return null;
   return (
-    <ol className="mt-2 flex flex-wrap items-center gap-x-1 gap-y-1.5 text-xs text-zinc-500">
+    <ol className="mt-2 flex flex-wrap items-center gap-x-1 gap-y-1.5 text-xs text-zinc-500 dark:text-zinc-400">
       {timeline.map((e, i) => {
         const next = timeline[i + 1];
         const spentMs =
@@ -41,10 +41,10 @@ export function VisitTimeline({ visit }: { visit: Visit }) {
         const open = last && e.status !== "completed";
         return (
           <li key={i} className="flex items-center gap-1">
-            <span className="rounded-full bg-zinc-100 px-2 py-0.5 font-medium text-zinc-600">
+            <span className="rounded-full bg-zinc-100 px-2 py-0.5 font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
               {STAGE_LABELS[e.status]} {at(e.at)}
               {(next || open) && e.status !== "completed" && (
-                <span className="ml-1 font-normal text-zinc-400">
+                <span className="ml-1 font-normal text-zinc-400 dark:text-zinc-500">
                   · {formatDuration(spentMs)}
                 </span>
               )}

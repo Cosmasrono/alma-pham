@@ -40,33 +40,33 @@ export const SERIES_COLORS = [
 /** One-hue ramp for ordered stages (a funnel, tiers). The light end still
  *  clears the surface at 2.1:1. */
 export const ORDINAL_TEAL = [
-  "#5cc3b6",
-  "#2eae9e",
-  "#0d9488",
-  "#0b7d72",
-  "#0a6660",
-  "#08504b",
+  "var(--ord-teal-0, #5cc3b6)",
+  "var(--ord-teal-1, #2eae9e)",
+  "var(--ord-teal-2, #0d9488)",
+  "var(--ord-teal-3, #0b7d72)",
+  "var(--ord-teal-4, #0a6660)",
+  "var(--ord-teal-5, #08504b)",
 ] as const;
 
 /** One-hue ramp for continuous magnitude (the heatmap). The lightest step is
  *  allowed to recede toward the surface — it means "near zero". */
 export const SEQUENTIAL_TEAL = [
-  "#eef7f5",
-  "#d2ece7",
-  "#a9dbd3",
-  "#78cabf",
-  "#38b3a4",
-  "#0d9488",
-  "#0b7d72",
+  "var(--seq-teal-0, #eef7f5)",
+  "var(--seq-teal-1, #d2ece7)",
+  "var(--seq-teal-2, #a9dbd3)",
+  "var(--seq-teal-3, #78cabf)",
+  "var(--seq-teal-4, #38b3a4)",
+  "var(--seq-teal-5, #0d9488)",
+  "var(--seq-teal-6, #0b7d72)",
 ] as const;
 
 export const INK = {
-  primary: "#10201d",
-  secondary: "#52605c",
-  muted: "#7c8783",
-  grid: "#e7edeb",
-  axis: "#cdd8d5",
-  surface: "#ffffff",
+  primary: "var(--ink-primary, #10201d)",
+  secondary: "var(--ink-secondary, #52605c)",
+  muted: "var(--ink-muted, #7c8783)",
+  grid: "var(--ink-grid, #e7edeb)",
+  axis: "var(--ink-axis, #cdd8d5)",
+  surface: "var(--ink-surface, #ffffff)",
   good: "#0ca30c",
   critical: "#d03b3b",
 } as const;
@@ -211,21 +211,21 @@ export function ChartCard({
   return (
     <section
       className={cn(
-        "flex flex-col rounded-2xl border border-teal-950/[0.07] bg-white p-4 shadow-[0_1px_2px_rgb(4_47_43/0.04),0_10px_26px_-16px_rgb(4_47_43/0.16)]",
+        "flex flex-col rounded-xl border border-border bg-card p-5 shadow-sm text-card-foreground",
         className,
       )}
     >
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="truncate text-sm font-semibold text-teal-950">{title}</h3>
+          <h3 className="truncate text-sm font-semibold text-foreground">{title}</h3>
           {subtitle && (
-            <p className="mt-0.5 truncate text-xs text-zinc-500">{subtitle}</p>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">{subtitle}</p>
           )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {action}
           {table && (
-            <div className="flex rounded-full border border-zinc-200 p-0.5">
+            <div className="flex rounded-full border border-border p-0.5 bg-muted/30">
               {(["chart", "table"] as const).map((v) => (
                 <button
                   key={v}
@@ -235,8 +235,8 @@ export function ChartCard({
                   className={cn(
                     "rounded-full px-2.5 py-1 text-[11px] font-medium capitalize transition-colors",
                     view === v
-                      ? "bg-teal-700 text-white"
-                      : "text-zinc-500 hover:text-teal-900",
+                      ? "bg-primary text-primary-foreground shadow-xs"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {v}
@@ -255,9 +255,9 @@ export function ChartCard({
 
 export function DataTable({ columns, rows }: TableView) {
   return (
-    <div className="max-h-72 overflow-auto rounded-xl border border-zinc-100">
+    <div className="max-h-72 overflow-auto rounded-xl border border-border">
       <table className="w-full text-left text-xs">
-        <thead className="sticky top-0 bg-zinc-50 text-zinc-500">
+        <thead className="sticky top-0 bg-muted text-muted-foreground">
           <tr>
             {columns.map((c, i) => (
               <th
@@ -273,14 +273,14 @@ export function DataTable({ columns, rows }: TableView) {
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-zinc-100">
+        <tbody className="divide-y divide-border">
           {rows.map((row, ri) => (
-            <tr key={ri}>
+            <tr key={ri} className="hover:bg-muted/40 transition-colors">
               {row.map((cell, ci) => (
                 <td
                   key={ci}
                   className={cn(
-                    "px-3 py-1.5 text-zinc-700",
+                    "px-3 py-1.5 text-foreground/90",
                     ci > 0 && "text-right tabular-nums",
                   )}
                 >
@@ -293,7 +293,7 @@ export function DataTable({ columns, rows }: TableView) {
             <tr>
               <td
                 colSpan={columns.length}
-                className="px-3 py-6 text-center text-zinc-400"
+                className="px-3 py-6 text-center text-muted-foreground"
               >
                 Nothing recorded in this period.
               </td>
@@ -325,9 +325,9 @@ export function Legend({
             )}
             style={{ background: it.color }}
           />
-          <span className="text-zinc-600">{it.label}</span>
+          <span className="text-muted-foreground">{it.label}</span>
           {it.value && (
-            <span className="font-medium tabular-nums text-zinc-900">{it.value}</span>
+            <span className="font-medium tabular-nums text-foreground">{it.value}</span>
           )}
         </li>
       ))}
@@ -351,10 +351,10 @@ function Readout({
   const clamped = Math.min(Math.max(x, 80), Math.max(width - 80, 80));
   return (
     <div
-      className="pointer-events-none absolute top-1 z-10 -translate-x-1/2 rounded-xl border border-teal-950/10 bg-white/95 px-2.5 py-2 shadow-lg"
+      className="pointer-events-none absolute top-1 z-10 -translate-x-1/2 rounded-xl border border-border bg-card/95 px-2.5 py-2 shadow-lg backdrop-blur-xs"
       style={{ left: clamped }}
     >
-      <p className="mb-1 whitespace-nowrap text-[11px] text-zinc-500">{title}</p>
+      <p className="mb-1 whitespace-nowrap text-[11px] text-muted-foreground">{title}</p>
       <ul className="space-y-0.5">
         {rows.map((r) => (
           <li
@@ -366,8 +366,8 @@ function Readout({
               className="h-0.5 w-3 shrink-0 rounded-full"
               style={{ background: r.color }}
             />
-            <span className="font-semibold tabular-nums text-zinc-900">{r.value}</span>
-            <span className="text-zinc-500">{r.label}</span>
+            <span className="font-semibold tabular-nums text-foreground">{r.value}</span>
+            <span className="text-muted-foreground">{r.label}</span>
           </li>
         ))}
       </ul>
@@ -377,7 +377,7 @@ function Readout({
 
 export function ChartEmpty({ children }: { children: ReactNode }) {
   return (
-    <div className="grid h-full min-h-32 place-items-center rounded-xl border border-dashed border-teal-900/15 px-4 text-center text-xs text-zinc-400">
+    <div className="grid h-full min-h-32 place-items-center rounded-xl border border-dashed border-teal-900/15 dark:border-teal-500/20 px-4 text-center text-xs text-muted-foreground">
       {children}
     </div>
   );
@@ -463,9 +463,9 @@ export function StatTile({
   const up = (delta ?? 0) > 0;
   const good = up === goodWhenUp;
   return (
-    <div className="flex flex-col rounded-2xl border border-teal-950/[0.07] bg-white p-4 shadow-[0_1px_2px_rgb(4_47_43/0.04),0_10px_26px_-16px_rgb(4_47_43/0.16)]">
-      <p className="text-xs font-medium text-zinc-500">{label}</p>
-      <p className="mt-1 text-2xl font-semibold tracking-tight text-teal-950">
+    <div className="flex flex-col rounded-xl border border-border bg-card p-5 shadow-sm text-card-foreground">
+      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      <p className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
         {value}
       </p>
       <div className="mt-1 flex min-h-5 flex-wrap items-center gap-x-2 text-xs">
@@ -478,7 +478,7 @@ export function StatTile({
             {flat ? "flat" : `${Math.abs(delta).toFixed(0)}%`}
           </span>
         )}
-        {hint && <span className="text-zinc-400">{hint}</span>}
+        {hint && <span className="text-muted-foreground">{hint}</span>}
       </div>
       {/* A sparkline of nothing is a straight line pretending to be a trend. */}
       {trend && trend.length > 1 && trend.some((v) => v > 0) && (

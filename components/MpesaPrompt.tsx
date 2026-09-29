@@ -191,7 +191,7 @@ export function StkBanner({
 }) {
   if (stk.status === "pending") {
     return (
-      <div className="mt-3 flex items-center justify-between rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
+      <div className="mt-3 flex items-center justify-between rounded-lg border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/40 p-3 text-sm text-amber-800 dark:text-amber-300">
         <span className="animate-pulse">
           Request sent to {phone} — waiting for the customer to enter their
           M-Pesa PIN…
@@ -204,14 +204,14 @@ export function StkBanner({
   }
   if (stk.status === "success") {
     return (
-      <p className="mt-3 rounded-lg bg-teal-50 p-3 text-sm text-teal-800">
+      <p className="mt-3 rounded-lg border border-teal-200 dark:border-teal-900/50 bg-teal-50 dark:bg-teal-950/40 p-3 text-sm text-teal-800 dark:text-teal-300">
         Payment confirmed and money received
         {stk.receipt ? ` (${stk.receipt})` : ""} — {success}
       </p>
     );
   }
   return (
-    <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+    <p className="mt-3 rounded-lg border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 p-3 text-sm text-red-700 dark:text-red-300">
       Payment failed or not confirmed: {stk.detail ?? "no money received"}.{" "}
       <button className="underline" onClick={onReset}>
         Try again

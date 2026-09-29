@@ -328,7 +328,7 @@ export function AiAssistant() {
       {open && (
         <div
           className={cn(
-            "fixed z-40 flex flex-col overflow-hidden rounded-2xl border border-teal-950/10 bg-white shadow-2xl shadow-teal-950/25 print:hidden",
+            "fixed z-40 flex flex-col overflow-hidden rounded-2xl border border-teal-950/10 bg-white shadow-2xl shadow-teal-950/25 dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-[0_25px_60px_rgba(0,0,0,0.6)] print:hidden",
             SIZE_CLASS[size],
           )}
         >
@@ -380,7 +380,7 @@ export function AiAssistant() {
                     <button
                       key={s}
                       onClick={() => void ask(s)}
-                      className="block w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-left text-sm text-zinc-600 transition-colors hover:border-teal-600/30 hover:bg-teal-50 hover:text-teal-900"
+                      className="block w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-left text-sm text-zinc-600 transition-colors hover:border-teal-600/30 hover:bg-teal-50 hover:text-teal-900 dark:border-zinc-800 dark:bg-zinc-800/60 dark:text-zinc-300 dark:hover:border-teal-500/40 dark:hover:bg-teal-950/40 dark:hover:text-teal-200"
                     >
                       {s}
                     </button>
@@ -402,7 +402,7 @@ export function AiAssistant() {
                 }
                 return (
                   <div key={i} className="group mr-auto max-w-[92%]">
-                    <div className="rounded-2xl rounded-bl-md bg-zinc-100 px-3 py-2 text-zinc-800">
+                    <div className="rounded-2xl rounded-bl-md bg-zinc-100 px-3 py-2 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-100">
                       {m.content === "" ? (
                         <Spinner className="my-1 text-teal-700" />
                       ) : (
@@ -430,12 +430,12 @@ export function AiAssistant() {
               })}
 
               {error && (
-                <div className="rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700 ring-1 ring-inset ring-red-600/15">
+                <div className="rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700 ring-1 ring-inset ring-red-600/15 dark:bg-red-950/40 dark:text-red-300 dark:ring-red-500/30">
                   <p>{error}</p>
                   {lastAskRef.current && (
                     <button
                       onClick={retry}
-                      className="mt-1.5 inline-flex items-center gap-1 font-medium text-red-800 underline underline-offset-2 hover:text-red-900"
+                      className="mt-1.5 inline-flex items-center gap-1 font-medium text-red-800 underline underline-offset-2 hover:text-red-900 dark:text-red-300 dark:hover:text-red-200"
                     >
                       <RotateCcwIcon className="size-3" /> Retry
                     </button>
@@ -453,7 +453,7 @@ export function AiAssistant() {
                   el?.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
                 }}
                 aria-label="Jump to latest"
-                className="absolute bottom-3 left-1/2 grid h-8 w-8 -translate-x-1/2 place-items-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-md transition-colors hover:text-teal-700"
+                className="absolute bottom-3 left-1/2 grid h-8 w-8 -translate-x-1/2 place-items-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-md transition-colors hover:text-teal-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:text-teal-300"
               >
                 <ArrowDownIcon className="size-4" />
               </button>
@@ -465,7 +465,7 @@ export function AiAssistant() {
               e.preventDefault();
               void ask(input);
             }}
-            className="flex items-end gap-2 border-t border-zinc-100 p-2.5"
+            className="flex items-end gap-2 border-t border-zinc-100 p-2.5 dark:border-zinc-800"
           >
             <textarea
               ref={inputRef}
@@ -474,7 +474,7 @@ export function AiAssistant() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onComposerKeyDown}
               placeholder="Ask the assistant…  (Enter to send, Shift+Enter for a new line)"
-              className="max-h-32 min-h-10 flex-1 resize-none rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
+              className="max-h-32 min-h-10 flex-1 resize-none rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20 dark:border-zinc-700 dark:bg-zinc-800/80 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-teal-500"
             />
             {busy ? (
               <button

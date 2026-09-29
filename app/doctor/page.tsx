@@ -113,11 +113,11 @@ export default function DoctorPage() {
                   className={`rounded-xl border p-3 text-left transition-colors ${
                     selectedId === v.id
                       ? emergency
-                        ? "border-red-500 bg-red-50"
-                        : "border-teal-500 bg-teal-50"
+                        ? "border-red-500 bg-red-50 dark:bg-red-950/60"
+                        : "border-teal-500 bg-teal-50 dark:bg-teal-950/60"
                       : emergency
-                        ? "border-red-300 bg-red-50/60 hover:border-red-400"
-                        : "border-zinc-200 bg-white hover:border-zinc-300"
+                        ? "border-red-300 dark:border-red-900/60 bg-red-50/60 dark:bg-red-950/30 hover:border-red-400"
+                        : "border-border bg-card hover:border-teal-600/30 hover:bg-muted/50"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
@@ -182,8 +182,8 @@ function QueueTab({
         active
           ? "bg-teal-600 text-white"
           : warn
-            ? "border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100"
-            : "border border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-50"
+            ? "border border-amber-300 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40"
+            : "border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
       }`}
     >
       {label}
@@ -622,7 +622,7 @@ function ServiceOrderForm({ visitId }: { visitId: string }) {
       </Field>
       <Field label="Select all required tests / procedures">
         {available.length === 0 ? (
-          <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
+          <p className="rounded-lg border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/40 p-3 text-xs text-amber-800 dark:text-amber-300">
             Nothing in the catalog for this department yet — an admin adds
             these under Service catalog.
           </p>
@@ -630,8 +630,8 @@ function ServiceOrderForm({ visitId }: { visitId: string }) {
           <div className="grid gap-2 sm:grid-cols-2">
             {available.map((s) => (
               <label key={s.id} className={cn(
-                "flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm",
-                selectedIds.includes(s.id) ? "border-teal-500 bg-teal-50" : "border-zinc-200 bg-white",
+                "flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm transition-colors",
+                selectedIds.includes(s.id) ? "border-teal-500 bg-teal-50 dark:bg-teal-950/60 ring-1 ring-teal-500/20" : "border-border bg-card hover:bg-muted/50",
               )}>
                 <input
                   type="checkbox"
@@ -641,7 +641,7 @@ function ServiceOrderForm({ visitId }: { visitId: string }) {
                     ids.includes(s.id) ? ids.filter((id) => id !== s.id) : [...ids, s.id]
                   )}
                 />
-                <span><strong>{s.name}</strong><span className="block text-xs text-zinc-500">{s.price > 0 ? `KSh ${s.price.toLocaleString("en-KE")}` : "Free"}</span></span>
+                <span><strong>{s.name}</strong><span className="block text-xs text-muted-foreground">{s.price > 0 ? `KSh ${s.price.toLocaleString("en-KE")}` : "Free"}</span></span>
               </label>
             ))}
           </div>

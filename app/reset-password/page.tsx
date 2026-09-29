@@ -24,7 +24,10 @@ export default function ResetPasswordPage() {
 }
 
 function ResetForm() {
-  const token = useSearchParams().get("token") ?? "";
+  const params = useSearchParams();
+  const token = params.get("token") ?? "";
+  const setup = params.get("mode") === "setup";
+  const [username, setUsername] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -73,17 +76,29 @@ function ResetForm() {
         return;
       }
       notify("success", "Password updated. Sign in with your new password.");
-      window.location.href = "/login";
+      const body = await res.json();
+      setUsername(body.username);
+      setPassword("");
+      setConfirm("");
+      setBusy(false);
     } catch {
       setError("Network error. Please try again.");
       setBusy(false);
     }
   };
 
+  if (username) return (
+    <>
+      <h1 className="mb-2 text-xl font-semibold text-teal-950">Your password is ready</h1>
+      <p className="mb-5 text-sm text-zinc-600">Sign in as <strong>{username}</strong> using the password you just chose.</p>
+      <a href="/login" className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-teal-700 px-4 text-sm font-medium text-white hover:bg-teal-800">Continue to sign in</a>
+    </>
+  );
+
   return (
     <>
       <h1 className="mb-1 font-display text-xl font-semibold text-teal-950">
-        Choose a new password
+        {setup ? "Set up your password" : "Choose a new password"}
       </h1>
       <p className="mb-5 text-sm text-zinc-500">
         Pick a new password for your account. You&apos;ll sign in with it right
@@ -115,7 +130,7 @@ function ResetForm() {
         </Field>
         {error && (
           <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
-            {error}
+            {error} <a href="/forgot-password" className="underline">Request a new link</a>
           </p>
         )}
         <Button type="submit" disabled={busy} className="w-full">

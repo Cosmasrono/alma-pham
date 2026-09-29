@@ -27,14 +27,13 @@ interface StaffUser {
 
 // Roles the admin can hand out. There is only ever one admin (the one who
 // signed up), so it is never offered here.
-const STAFF_ROLES = ROLES.filter((r) => r !== "admin");
+const STAFF_ROLES = ROLES.filter((r) => r !== "admin" && r !== "developer");
 
 const emptyForm = {
   name: "",
   username: "",
   email: "",
   role: "receptionist" as Role,
-  password: "",
   branchId: "",
 };
 
@@ -53,6 +52,8 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [userToDelete, setUserToDelete] = useState<StaffUser | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [sendingId, setSendingId] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -71,27 +72,36 @@ export default function UsersPage() {
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (creating) return;
+    setCreating(true);
     setError(null);
-    const res = await fetch("/api/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    if (!res.ok) {
-      const body = (await res.json().catch(() => ({}))) as { error?: string };
-      const message = body.error ?? "Could not create user";
-      setError(message);
-      notify("error", message);
-      return;
-    }
-    const body = (await res.json()) as UsersApiResponse;
-    setUsers(body.users);
-    setForm(emptyForm);
-    notify("success", "Staff account created.");
-    if (body.warning) {
-      notify("error", body.warning);
-    } else if (form.email.trim()) {
-      notify("success", `Password setup link emailed to ${form.email.trim()}.`);
+    try {
+      const res = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        const message = body.error ?? "Could not create user";
+        setError(message);
+        notify("error", message);
+        return;
+      }
+      const body = (await res.json()) as UsersApiResponse;
+      setUsers(body.users);
+      setForm(emptyForm);
+      notify("success", "Staff account created.");
+      if (body.warning) {
+        setError(body.warning);
+        notify("error", body.warning);
+      } else if (form.email.trim()) {
+        notify("success", `Password setup link emailed to ${form.email.trim()}.`);
+      }
+    } catch {
+      setError("The request could not be completed. Refresh the user list before retrying; if the account exists, use Send setup link.");
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -110,9 +120,23 @@ export default function UsersPage() {
     notify("success", "Staff account updated.");
   };
 
-  const resetPassword = async (id: string) => {
-    const pw = prompt("New password for this user:");
-    if (pw) patch(id, { password: pw } as Partial<StaffUser>);
+  const sendSetupLink = async (user: StaffUser) => {
+    if (sendingId) return;
+    setSendingId(user.id);
+    try {
+      const res = await fetch("/api/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: user.id, action: "send-setup-link" }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error ?? "Could not send the email.");
+      notify("success", `Password setup link sent to ${user.email}.`);
+    } catch (err) {
+      notify("error", err instanceof Error ? err.message : "Could not send the email.");
+    } finally {
+      setSendingId(null);
+    }
   };
 
   const editEmail = async (u: StaffUser) => {
@@ -256,9 +280,10 @@ export default function UsersPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => resetPassword(u.id)}
+                            onClick={() => sendSetupLink(u)}
+                            disabled={!!sendingId || !u.active || !u.email}
                           >
-                            Reset pw
+                            {sendingId === u.id ? "Sending…" : "Send setup link"}
                           </Button>
                           <Button
                             size="sm"
@@ -307,13 +332,14 @@ export default function UsersPage() {
                 required
               />
             </Field>
-            <Field label="Email (sign-in details are sent here)">
+            <Field label="Email (password setup link)">
               <input
                 className={inputClass}
                 type="email"
                 value={form.email}
                 onChange={set("email")}
-                placeholder="recommended"
+                placeholder="staff@example.com"
+                required
               />
             </Field>
             <Field label="Role">
@@ -343,21 +369,13 @@ export default function UsersPage() {
               </select>
             </Field>
             )}
-            <Field label="Temporary password (optional)">
-              <input
-                className={inputClass}
-                type="password"
-                value={form.password}
-                onChange={set("password")}
-                placeholder="Leave empty to generate one"
-              />
-            </Field>
+            <p className="text-xs leading-relaxed text-zinc-500">We will email a link so this staff member can choose their own password and sign in. The link expires in 7 days.</p>
             {error && (
               <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
                 {error}
               </p>
             )}
-            <Button type="submit">Create account</Button>
+            <Button type="submit" disabled={creating}>{creating ? <><Spinner /> Creating & sending…</> : "Create account & send invite"}</Button>
           </form>
         </Card>
       </div>

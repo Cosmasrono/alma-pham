@@ -300,27 +300,27 @@ function PosCard({
                 const stockItem = m.medicineId ? catalog.get(m.medicineId) : undefined;
                 const inCart = stockItem ? cart.get(stockItem.id) ?? 0 : 0;
                 return (
-                <li key={m.id} className="rounded-xl border border-zinc-200 bg-white p-3">
+                <li key={m.id} className="rounded-xl border border-border bg-card p-3">
                   <div className="flex items-start justify-between gap-3">
                     <span>
-                      <strong>{m.name}</strong>
-                      <span className="mt-1 block text-xs text-zinc-500">{m.dosage} · {m.frequency} · {m.duration}</span>
+                      <strong className="text-foreground">{m.name}</strong>
+                      <span className="mt-1 block text-xs text-muted-foreground">{m.dosage} · {m.frequency} · {m.duration}</span>
                       {m.quantity != null && (
-                        <span className="mt-1 block text-xs font-medium text-teal-700">Give {m.quantity}</span>
+                        <span className="mt-1 block text-xs font-medium text-teal-700 dark:text-teal-400">Give {m.quantity}</span>
                       )}
                     </span>
                     {stockItem ? (
                       stockItem.stock <= 0 ? (
-                        <span className="rounded-full bg-red-50 px-2 py-1 text-xs text-red-700">Out of stock</span>
+                        <span className="rounded-full border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/60 px-2 py-1 text-xs text-red-700 dark:text-red-300">Out of stock</span>
                       ) : inCart > 0 ? (
-                        <span className="rounded-full bg-teal-50 px-2 py-1 text-xs text-teal-700">In cart</span>
+                        <span className="rounded-full border border-teal-200 dark:border-teal-900/50 bg-teal-50 dark:bg-teal-950/60 px-2 py-1 text-xs text-teal-700 dark:text-teal-300">In cart</span>
                       ) : (
                         <Button size="sm" variant="secondary" onClick={() => restoreLine(stockItem)}>
                           Add back
                         </Button>
                       )
                     ) : (
-                      <span className="rounded-full bg-amber-50 px-2 py-1 text-xs text-amber-700">Legacy · search shelf</span>
+                      <span className="rounded-full border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/60 px-2 py-1 text-xs text-amber-700 dark:text-amber-300">Legacy · search shelf</span>
                     )}
                   </div>
                 </li>

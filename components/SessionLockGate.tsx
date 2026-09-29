@@ -175,9 +175,9 @@ export function SessionLockGate() {
 
   return (
     <div className="fixed inset-0 z-100 grid place-items-center bg-teal-950/70 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-2xl border border-white/20 bg-white p-6 shadow-2xl">
-        <h2 className="font-display text-2xl font-semibold text-teal-950">Session locked</h2>
-        <p className="mt-1 text-sm text-zinc-500">
+      <div className="w-full max-w-sm rounded-2xl border border-white/20 bg-white p-6 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900">
+        <h2 className="font-display text-2xl font-semibold text-teal-950 dark:text-zinc-100">Session locked</h2>
+        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
           For security, enter your 4-digit PIN to continue.
         </p>
 
@@ -195,8 +195,8 @@ export function SessionLockGate() {
                 if (e.key === "Enter") void unlockWithPin();
               }}
             />
-            <p className="text-center text-xs text-zinc-400">{hiddenPin || "Enter 4 digits"}</p>
-            {error && <p className="rounded-lg bg-red-50 p-2 text-sm text-red-700">{error}</p>}
+            <p className="text-center text-xs text-zinc-400 dark:text-zinc-500">{hiddenPin || "Enter 4 digits"}</p>
+            {error && <p className="rounded-lg bg-red-50 p-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{error}</p>}
             <Button className="w-full" onClick={unlockWithPin} disabled={busy}>
               {busy ? "Unlocking..." : "Unlock"}
             </Button>
@@ -229,7 +229,7 @@ export function SessionLockGate() {
                 if (e.key === "Enter") void savePin();
               }}
             />
-            {error && <p className="rounded-lg bg-red-50 p-2 text-sm text-red-700">{error}</p>}
+            {error && <p className="rounded-lg bg-red-50 p-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">{error}</p>}
             <Button className="w-full" onClick={savePin} disabled={busy}>
               {busy ? "Saving..." : "Save PIN and unlock"}
             </Button>

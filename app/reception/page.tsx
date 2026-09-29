@@ -142,8 +142,8 @@ function TabBar({
             className={cn(
               "flex min-h-10 min-w-max flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
               active
-                ? "bg-white text-zinc-900 shadow-sm"
-                : "text-zinc-500 hover:text-zinc-700",
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             {t.label}
@@ -152,8 +152,8 @@ function TabBar({
                 className={cn(
                   "rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums",
                   active
-                    ? "bg-teal-100 text-teal-700"
-                    : "bg-zinc-200 text-zinc-600",
+                    ? "bg-teal-100 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300"
+                    : "bg-muted text-muted-foreground",
                 )}
               >
                 {t.count}
@@ -231,13 +231,13 @@ function InClinicStrip() {
 
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2 text-xs">
-      <span className="font-medium text-zinc-500">
+      <span className="font-medium text-muted-foreground">
         {open.length} in clinic:
       </span>
       {[...counts.entries()].map(([loc, n]) => (
         <span
           key={loc}
-          className="rounded-full border border-zinc-200 bg-white px-2.5 py-1 font-medium text-zinc-600"
+          className="rounded-full border border-border bg-card px-2.5 py-1 font-medium text-muted-foreground"
         >
           {n} · {LOCATION_LABELS[loc]}
         </span>
@@ -1022,7 +1022,7 @@ function TriageCard({
                 "flex-1 rounded-md py-1.5 text-xs font-medium transition-colors",
                 priority === opt.value
                   ? opt.active
-                  : "text-zinc-600 hover:bg-white",
+                  : "text-muted-foreground hover:bg-card hover:text-foreground",
               )}
             >
               {opt.label}
@@ -1032,7 +1032,7 @@ function TriageCard({
       </div>
 
       {error && (
-        <p className="mt-3 rounded-lg border border-red-200 bg-red-50 p-2 text-xs text-red-700">
+        <p className="mt-3 rounded-lg border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 p-2 text-xs text-red-700 dark:text-red-300">
           {error}
         </p>
       )}
@@ -1059,10 +1059,10 @@ function PatientsTab() {
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-zinc-50 text-left text-xs uppercase tracking-wide text-zinc-500">
+          <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
               <th className="px-4 py-2.5 font-medium">MRN</th>
               <th className="px-4 py-2.5 font-medium">Name</th>
@@ -1084,28 +1084,28 @@ function PatientsTab() {
               const slow =
                 timing &&
                 (timing.totalMs >= VERY_LONG_STAY_MS
-                  ? "bg-red-50/60 hover:bg-red-50"
+                  ? "bg-red-50/60 dark:bg-red-950/40 hover:bg-red-50 dark:hover:bg-red-950/60"
                   : timing.totalMs >= LONG_STAY_MS
-                    ? "bg-amber-50/60 hover:bg-amber-50"
+                    ? "bg-amber-50/60 dark:bg-amber-950/40 hover:bg-amber-50 dark:hover:bg-amber-950/60"
                     : null);
               return (
                 <tr
                   key={p.id}
                   className={cn(
-                    "border-t border-zinc-100 transition-colors",
-                    slow ?? "hover:bg-zinc-50/60",
+                    "border-t border-border transition-colors",
+                    slow ?? "hover:bg-muted/50",
                   )}
                 >
-                  <td className="px-4 py-2.5 font-mono text-xs text-zinc-600">
+                  <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">
                     {p.mrn}
                   </td>
-                  <td className="px-4 py-2.5 font-medium text-zinc-800">
+                  <td className="px-4 py-2.5 font-medium text-foreground">
                     {patientName(p)}
                   </td>
-                  <td className="px-4 py-2.5 text-zinc-600">
+                  <td className="px-4 py-2.5 text-muted-foreground">
                     <span className="capitalize">{p.gender}</span>, {p.age}y
                   </td>
-                  <td className="px-4 py-2.5 text-zinc-600">
+                  <td className="px-4 py-2.5 text-muted-foreground">
                     {p.phone || "—"}
                   </td>
                   <td className="px-4 py-2.5">

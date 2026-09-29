@@ -116,10 +116,10 @@ export function BranchOverview({ range }: { range: Range }) {
           >
             Refresh
           </button>
-          <Link href="/admin/transfers" className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-zinc-700 hover:bg-zinc-50">
+          <Link href="/admin/transfers" className="rounded-lg border border-border bg-card px-3 py-1.5 text-foreground hover:bg-muted">
             Transfer stock
           </Link>
-          <Link href="/admin/users" className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-zinc-700 hover:bg-zinc-50">
+          <Link href="/admin/users" className="rounded-lg border border-border bg-card px-3 py-1.5 text-foreground hover:bg-muted">
             Assign staff
           </Link>
           <Link href="/admin/branches" className="rounded-lg bg-teal-700 px-3 py-1.5 text-white hover:bg-teal-800">
@@ -128,9 +128,9 @@ export function BranchOverview({ range }: { range: Range }) {
         </div>
       </div>
 
-      {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+      {error && <p className="rounded-lg bg-red-50 dark:bg-red-950/40 dark:text-red-300 p-3 text-sm text-red-700">{error}</p>}
       {!current && !error && (
-        <p className="rounded-2xl bg-white/70 p-6 text-center text-sm text-zinc-400">Loading branches…</p>
+        <p className="rounded-2xl bg-card/70 p-6 text-center text-sm text-muted-foreground">Loading branches…</p>
       )}
 
       {current && (
@@ -215,18 +215,18 @@ function BranchCard({
   return (
     <article
       className={cn(
-        "flex flex-col rounded-2xl border bg-white p-4 shadow-[0_1px_2px_rgb(4_47_43/0.04)]",
-        viewing ? "border-teal-500 ring-1 ring-teal-500" : "border-teal-950/[0.07]",
+        "flex flex-col rounded-2xl border bg-card p-4 shadow-sm text-card-foreground",
+        viewing ? "border-teal-500 ring-1 ring-teal-500" : "border-border",
         !branch.active && "opacity-60",
       )}
     >
       <header className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <h3 className="flex items-center gap-2 truncate text-sm font-semibold text-teal-950">
+          <h3 className="flex items-center gap-2 truncate text-sm font-semibold text-foreground">
             <span aria-hidden className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />
             {branch.name}
           </h3>
-          <p className="mt-0.5 font-mono text-[10px] text-zinc-400">
+          <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
             {branch.code}
             {branch.isMain && " · main"}
             {!branch.active && " · closed"}
@@ -234,20 +234,20 @@ function BranchCard({
           </p>
         </div>
         {stats.openNow > 0 && (
-          <span className="shrink-0 rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-semibold text-teal-800">
+          <span className="shrink-0 rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-semibold text-teal-800 dark:bg-teal-950/60 dark:text-teal-300">
             {stats.openNow} in clinic now
           </span>
         )}
       </header>
 
       <div className="mt-3 flex items-baseline gap-2">
-        <p className="text-2xl font-bold tracking-tight text-zinc-900">{compactMoney(stats.revenue)}</p>
+        <p className="text-2xl font-bold tracking-tight text-foreground">{compactMoney(stats.revenue)}</p>
         {delta !== null && (
-          <span className={cn("text-xs font-semibold", delta >= 0 ? "text-emerald-700" : "text-rose-700")}>
+          <span className={cn("text-xs font-semibold", delta >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400")}>
             {delta >= 0 ? "▲" : "▼"} {Math.abs(Math.round(delta))}%
           </span>
         )}
-        <span className="ml-auto text-[11px] text-zinc-400">{Math.round(share * 100)}% of total</span>
+        <span className="ml-auto text-[11px] text-muted-foreground">{Math.round(share * 100)}% of total</span>
       </div>
 
       {/* In-house vs community split of this branch's revenue */}
