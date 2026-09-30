@@ -46,26 +46,41 @@ export function StockBatchesPanel({ medicine }: { medicine: Medicine }) {
   const [saved, setSaved] = useState<string | null>(null);
 
   const receive = async () => {
+    if (busy) return;
+    const units = Number(quantity);
+    if (!Number.isInteger(units) || units <= 0) {
+      setError("Enter a whole number of units greater than zero.");
+      return;
+    }
+    if (costPrice.trim() && (!Number.isFinite(Number(costPrice)) || Number(costPrice) < 0)) {
+      setError("Enter a valid cost of zero or more.");
+      return;
+    }
     setBusy(true);
     setError(null);
     setSaved(null);
-    const err = await receiveStock({
-      medicineId: medicine.id,
-      quantity: Number(quantity),
-      batchNumber,
-      expiryDate: expiryDate || undefined,
-      costPrice: costPrice.trim() === "" ? undefined : Number(costPrice),
-    });
-    setBusy(false);
-    if (err) {
-      setError(err);
-      return;
+    try {
+      const err = await receiveStock({
+        medicineId: medicine.id,
+        quantity: Number(quantity),
+        batchNumber,
+        expiryDate: expiryDate || undefined,
+        costPrice: costPrice.trim() === "" ? undefined : Number(costPrice),
+      });
+      if (err) {
+        setError(err);
+        return;
+      }
+      setSaved(`${quantity} unit(s) received.`);
+      setQuantity("");
+      setBatchNumber("");
+      setExpiryDate("");
+      setCostPrice("");
+    } catch {
+      setError("Could not receive stock. Please try again.");
+    } finally {
+      setBusy(false);
     }
-    setSaved(`${quantity} unit(s) received.`);
-    setQuantity("");
-    setBatchNumber("");
-    setExpiryDate("");
-    setCostPrice("");
   };
 
   const writeOff = async (batch: MedicineBatch) => {
@@ -78,10 +93,10 @@ export function StockBatchesPanel({ medicine }: { medicine: Medicine }) {
     <div className="space-y-3">
       <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 p-3">
         <p className="mb-2 text-xs font-bold text-zinc-700 dark:text-zinc-300">Receive a delivery</p>
-        <div className="grid grid-cols-2 gap-2">
+        <fieldset disabled={busy} className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
           <Field label="Units received">
             <input
-              className={cn(inputClass, "h-9 text-xs")}
+              className={cn(inputClass, "h-11 w-full min-w-0 text-base sm:text-sm")}
               type="number"
               min="1"
               step="1"
@@ -92,7 +107,7 @@ export function StockBatchesPanel({ medicine }: { medicine: Medicine }) {
           </Field>
           <Field label="Expiry date">
             <input
-              className={cn(inputClass, "h-9 text-xs")}
+              className={cn(inputClass, "h-11 w-full min-w-0 text-base sm:text-sm")}
               type="date"
               value={expiryDate}
               onChange={(e) => setExpiryDate(e.target.value)}
@@ -100,7 +115,7 @@ export function StockBatchesPanel({ medicine }: { medicine: Medicine }) {
           </Field>
           <Field label="Batch number">
             <input
-              className={cn(inputClass, "h-9 text-xs")}
+              className={cn(inputClass, "h-11 w-full min-w-0 text-base sm:text-sm")}
               value={batchNumber}
               onChange={(e) => setBatchNumber(e.target.value)}
               placeholder="e.g. B2431"
@@ -108,7 +123,7 @@ export function StockBatchesPanel({ medicine }: { medicine: Medicine }) {
           </Field>
           <Field label="Cost per unit (KSh)">
             <input
-              className={cn(inputClass, "h-9 text-xs")}
+              className={cn(inputClass, "h-11 w-full min-w-0 text-base sm:text-sm")}
               type="number"
               min="0"
               step="0.01"
@@ -117,12 +132,11 @@ export function StockBatchesPanel({ medicine }: { medicine: Medicine }) {
               placeholder={String(medicine.costPrice || "")}
             />
           </Field>
-        </div>
+        </fieldset>
         {error && <p className="mt-2 rounded bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900/50 p-2 text-xs text-red-700 dark:text-red-300">{error}</p>}
         {saved && <p className="mt-2 rounded bg-teal-50 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-900/50 p-2 text-xs text-teal-800 dark:text-teal-300">{saved}</p>}
         <Button
           type="button"
-          size="sm"
           className="mt-2 w-full"
           disabled={busy || !quantity.trim()}
           onClick={receive}
@@ -146,8 +160,8 @@ export function StockBatchesPanel({ medicine }: { medicine: Medicine }) {
               const days = daysLeft(b);
               const style = expiryStyle(days);
               return (
-                <li key={b.id} className="flex items-center justify-between gap-2 py-2">
-                  <span>
+                <li key={b.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                  <span className="min-w-0 break-words">
                     <strong className="tabular-nums text-foreground">{b.quantity}</strong> units
                     {b.batchNumber ? ` · batch ${b.batchNumber}` : ""}
                     <span className="block text-[11px] text-zinc-400 dark:text-zinc-500">
@@ -160,7 +174,8 @@ export function StockBatchesPanel({ medicine }: { medicine: Medicine }) {
                       {style.label}
                     </span>
                     <button
-                      className="text-[11px] text-rose-700 dark:text-rose-400 hover:underline"
+                      type="button"
+                      className="min-h-11 px-2 text-xs text-rose-700 dark:text-rose-400 hover:underline"
                       onClick={() => void writeOff(b)}
                     >
                       Write off

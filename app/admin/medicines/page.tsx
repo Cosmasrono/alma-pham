@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import {
   PillIcon,
   SearchIcon,
@@ -44,6 +44,7 @@ import {
   cn,
   inputClass,
 } from "@/components/ui";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { downloadCsv } from "@/lib/export";
 import { findColumn, guessForm, readSpreadsheet, toNumber } from "@/lib/spreadsheet";
 
@@ -201,7 +202,7 @@ export default function MedicinesPage() {
           <button
             onClick={() => setIsEditModeUnlocked((prev) => !prev)}
             className={cn(
-              "inline-flex h-9 items-center gap-2 rounded-xl px-3 text-xs font-semibold transition-all border",
+              "hidden h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition-all border lg:inline-flex",
               isEditModeUnlocked
                 ? "bg-amber-50 border-amber-300 text-amber-900 shadow-xs"
                 : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50",
@@ -363,9 +364,9 @@ export default function MedicinesPage() {
       </div>
 
       {/* Main Content Layout: Catalog (Left) + Add Medicine Card (Right) */}
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+      <div className="grid min-w-0 gap-6 2xl:grid-cols-[minmax(0,1fr)_340px]">
         {/* Left Side: Catalog Table & Controls */}
-        <div className="space-y-3">
+        <div className="min-w-0 space-y-3">
           <div className="flex flex-col gap-2.5 rounded-2xl border border-teal-950/10 bg-white p-3 shadow-xs sm:flex-row sm:items-center sm:justify-between">
             <div className="relative flex-1">
               <SearchIcon className="absolute left-3 top-2.5 size-4 text-zinc-400" />
@@ -458,7 +459,26 @@ export default function MedicinesPage() {
             </EmptyState>
           ) : (
             <div className="overflow-hidden rounded-2xl border border-teal-950/10 bg-white shadow-xs">
-              <div className="overflow-x-auto">
+              <div className="divide-y divide-zinc-200 lg:hidden">
+                {filteredMedicines.map((medicine) => (
+                  <article key={medicine.id} className="space-y-3 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h2 className="break-words text-sm font-semibold text-zinc-900">{medicine.name}</h2>
+                        <p className="mt-1 text-xs text-zinc-500">{medicine.strength} · {medicine.form}</p>
+                      </div>
+                      <Button type="button" variant="secondary" className="shrink-0" onClick={() => setEditingMedicine(medicine)} aria-label={`Edit ${medicine.name}`}><Edit3Icon aria-hidden="true" className="size-4" />Edit</Button>
+                    </div>
+                    <dl className="grid grid-cols-3 gap-2 text-xs">
+                      <div><dt className="text-zinc-500">Cost</dt><dd className="mt-1 break-words font-medium tabular-nums">{money(medicine.costPrice || 0)}</dd></div>
+                      <div><dt className="text-zinc-500">Selling price</dt><dd className="mt-1 break-words font-semibold tabular-nums text-teal-800">{money(medicine.unitPrice)}</dd></div>
+                      <div><dt className="text-zinc-500">In stock</dt><dd className="mt-1 font-semibold tabular-nums">{medicine.stock} units</dd></div>
+                    </dl>
+                    <ExpiryBadge medicineId={medicine.id} />
+                  </article>
+                ))}
+              </div>
+              <div className="hidden overflow-x-auto lg:block">
                 <table className="w-full min-w-[800px] text-left text-xs">
                   <thead className="border-b border-zinc-200 bg-zinc-50/80 text-zinc-500">
                     <tr>
@@ -486,12 +506,13 @@ export default function MedicinesPage() {
             </div>
           )}
 
-          <div className="flex items-center justify-between text-[11px] text-zinc-400">
-            <span>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-500">
+            <span className="hidden lg:inline">
               {isEditModeUnlocked
                 ? "🔓 Edit All Mode: Typing directly in fields will autosave across all rows."
                 : "🔒 Click 'Edit' on any row to edit that specific item, or 'Unlock' to batch-edit all."}
             </span>
+            <span className="lg:hidden">Tap Edit to update a medicine.</span>
             <span>Total Shown: {filteredMedicines.length} items</span>
           </div>
         </div>
@@ -869,6 +890,23 @@ function EditSingleMedicineModal({
   medicine: Medicine;
   onClose: () => void;
 }) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const data = useClinic();
+  const currentMedicine = data.medicines.find((item) => item.id === medicine.id) ?? medicine;
+  const [tab, setTab] = useState("details");
+  const [stockChanged, setStockChanged] = useState(false);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const overflow = document.body.style.overflow;
+    dialog?.showModal();
+    document.body.style.overflow = "hidden";
+    return () => {
+      dialog?.close();
+      document.body.style.overflow = overflow;
+      previouslyFocused?.focus();
+    };
+  }, []);
   const [name, setName] = useState(medicine.name);
   const [strength, setStrength] = useState(medicine.strength || "");
   const [form, setForm] = useState(medicine.form);
@@ -893,226 +931,240 @@ function EditSingleMedicineModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
     setError(null);
 
     const finalStock =
       stockMode === "add"
-        ? Math.max(0, medicine.stock + (Number(addQty) || 0))
+        ? Math.max(0, currentMedicine.stock + (Number(addQty) || 0))
         : Math.max(0, Number(stockValue) || 0);
 
-    const err = await updateMedicine(medicine.id, {
-      name: name.trim(),
-      strength: strength.trim(),
-      form,
-      costPrice: numericCost,
-      unitPrice: numericPrice,
-      // Only a real stock change: counts are per branch, prices are not.
-      ...(finalStock !== medicine.stock && { stock: finalStock }),
-      requiresPrescription: rxOnly,
-      genericName: genericName.trim(),
-      barcode: barcode.trim(),
-      ...(reorderLevel.trim() !== "" && { reorderLevel: Number(reorderLevel) }),
-    });
+    try {
+      const err = await updateMedicine(medicine.id, {
+        name: name.trim(),
+        strength: strength.trim(),
+        form,
+        costPrice: numericCost,
+        unitPrice: numericPrice,
+        // Only a real stock change: counts are per branch, prices are not.
+        ...(stockChanged && finalStock !== currentMedicine.stock && { stock: finalStock }),
+        requiresPrescription: rxOnly,
+        genericName: genericName.trim(),
+        barcode: barcode.trim(),
+        ...(reorderLevel.trim() !== "" && { reorderLevel: Number(reorderLevel) }),
+      });
 
-    setLoading(false);
-    if (err) {
-      setError(err);
-    } else {
-      onClose();
+      if (err) {
+        setError(err);
+      } else {
+        onClose();
+      }
+    } catch {
+      setError("Could not save changes. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-teal-950/60 backdrop-blur-xs animate-in fade-in">
-      <div className="relative w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl border border-teal-950/15">
-        <div className="flex items-center justify-between border-b border-zinc-200 bg-teal-950 px-6 py-4 text-white">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-800 text-teal-100">
+    <dialog ref={dialogRef} aria-labelledby="edit-medicine-title" aria-describedby="edit-medicine-description" onCancel={(event) => { event.preventDefault(); if (!loading) onClose(); }} className="m-auto max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] max-w-2xl overflow-hidden rounded-2xl border border-zinc-200 bg-white p-0 text-zinc-900 shadow-2xl backdrop:bg-teal-950/60 backdrop:backdrop-blur-sm sm:max-h-[calc(100dvh-3rem)]">
+      <div className="flex max-h-[calc(100dvh-1rem)] min-h-0 flex-col sm:max-h-[calc(100dvh-3rem)]">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-zinc-200 bg-teal-950 px-4 py-4 text-white sm:px-6">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-800 text-teal-100">
               <Edit3Icon className="size-4" />
             </span>
-            <div>
-              <h2 className="text-base font-bold">Edit Medication Details</h2>
-              <p className="text-xs text-teal-200/80">Updating {medicine.name}</p>
+            <div className="min-w-0">
+              <h2 id="edit-medicine-title" className="text-base font-semibold">Edit medicine</h2>
+              <p id="edit-medicine-description" className="truncate text-sm text-teal-100">{medicine.name} · {currentMedicine.stock} units in stock</p>
             </div>
           </div>
-          <button onClick={onClose} className="rounded-lg p-1 text-teal-300 hover:text-white">
+          <button type="button" aria-label="Close medicine editor" disabled={loading} onClick={onClose} className="grid size-11 shrink-0 place-items-center rounded-lg text-teal-100 hover:bg-white/10 disabled:opacity-50">
             <XIcon className="size-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
-          <Field label="Generic / Brand Name">
-            <input
-              className={cn(inputClass, "h-9 text-xs")}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </Field>
-
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Strength / Dosage">
-              <input
-                className={cn(inputClass, "h-9 text-xs")}
-                value={strength}
-                onChange={(e) => setStrength(e.target.value)}
-                placeholder="e.g. 500mg"
-              />
-            </Field>
-
-            <Field label="Formulation">
-              <select
-                className={cn(inputClass, "h-9 text-xs capitalize py-0")}
-                value={form}
-                onChange={(e) => setForm(e.target.value)}
-              >
-                {FORMS.map((f) => (
-                  <option key={f} value={f} className="capitalize">
-                    {f}
-                  </option>
-                ))}
-              </select>
-            </Field>
+        <Tabs value={tab} onValueChange={setTab} className="flex min-h-0 flex-1 flex-col">
+          <div className="shrink-0 border-b border-zinc-200 px-4 py-3 sm:px-6">
+            <TabsList aria-label="Medicine editor sections" className="w-full"><TabsTrigger value="details" disabled={loading} className="flex-1">Details & prices</TabsTrigger><TabsTrigger value="batches" disabled={loading} className="flex-1">Stock & deliveries</TabsTrigger></TabsList>
           </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Supplier Cost (KSh)">
-              <input
-                className={cn(inputClass, "h-9 text-xs")}
-                type="number"
-                min="0"
-                step="0.01"
-                value={costPrice}
-                onChange={(e) => setCostPrice(e.target.value)}
-              />
-            </Field>
-
-            <Field label="Selling Price (KSh)">
-              <input
-                className={cn(inputClass, "h-9 text-xs font-bold text-teal-950")}
-                type="number"
-                min="0"
-                step="0.01"
-                value={unitPrice}
-                onChange={(e) => setUnitPrice(e.target.value)}
-                required
-              />
-            </Field>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Generic name (active ingredient)">
-              <input
-                className={cn(inputClass, "h-9 text-xs")}
-                value={genericName}
-                onChange={(e) => setGenericName(e.target.value)}
-                placeholder="e.g. paracetamol"
-              />
-            </Field>
-            <Field label="Barcode">
-              <input
-                className={cn(inputClass, "h-9 text-xs")}
-                value={barcode}
-                onChange={(e) => setBarcode(e.target.value)}
-                placeholder="Scan or type"
-              />
-            </Field>
-          </div>
-
-          <Field label="Reorder level (warn below this)">
-            <input
-              className={cn(inputClass, "h-9 text-xs")}
-              type="number"
-              min="0"
-              step="1"
-              value={reorderLevel}
-              onChange={(e) => setReorderLevel(e.target.value)}
-              placeholder={String(LOW_STOCK)}
-            />
-          </Field>
-
-          <div className="rounded-xl border border-teal-600/20 bg-teal-50/60 p-3 flex items-center justify-between">
-            <span className="text-zinc-600">Unit Profit Margin:</span>
-            <span className="font-bold text-teal-950">
-              {unitProfit >= 0 ? `+${money(unitProfit)}` : money(unitProfit)} ({marginPct}% margin)
-            </span>
-          </div>
-
-          <RxOnlyToggle checked={rxOnly} onChange={setRxOnly} />
-
-          {/* Deliveries with their own expiry dates — what the counter sells
-              down earliest-expiry-first. */}
-          <div className="border-t border-zinc-100 pt-3">
-            <StockBatchesPanel medicine={medicine} />
-          </div>
-
-          <div className="space-y-2 border-t border-zinc-100 pt-3">
-            <label className="text-xs font-bold text-zinc-700">Stock on Hand</label>
-            <div className="flex items-center gap-3">
-              <label className="flex items-center gap-1.5 cursor-pointer">
+          <TabsContent value="details" className="m-0 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6">
+            <form id="edit-medicine-form" onSubmit={handleSubmit} className="space-y-4 text-sm">
+              <fieldset disabled={loading} className="min-w-0 space-y-4">
+              <Field label="Generic / Brand Name">
                 <input
-                  type="radio"
-                  name="stockMode"
-                  checked={stockMode === "set"}
-                  onChange={() => setStockMode("set")}
-                  className="accent-teal-700"
+                  className={cn(inputClass, "h-11 w-full min-w-0 text-base sm:text-sm")}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
                 />
-                <span>Set exact quantity</span>
-              </label>
-              <label className="flex items-center gap-1.5 cursor-pointer">
-                <input
-                  type="radio"
-                  name="stockMode"
-                  checked={stockMode === "add"}
-                  onChange={() => setStockMode("add")}
-                  className="accent-teal-700"
-                />
-                <span>+ Restock (add to current {medicine.stock})</span>
-              </label>
-            </div>
+              </Field>
 
-            {stockMode === "set" ? (
-              <input
-                className={cn(inputClass, "h-9 w-full text-xs font-bold")}
-                type="number"
-                min="0"
-                value={stockValue}
-                onChange={(e) => setStockValue(e.target.value)}
-              />
-            ) : (
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-zinc-500">+</span>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field label="Strength / Dosage">
+                  <input
+                    className={cn(inputClass, "h-11 w-full min-w-0 text-base sm:text-sm")}
+                    value={strength}
+                    onChange={(e) => setStrength(e.target.value)}
+                    placeholder="e.g. 500mg"
+                  />
+                </Field>
+
+                <Field label="Formulation">
+                  <select
+                    className={cn(inputClass, "h-11 w-full min-w-0 text-base sm:text-sm capitalize py-0")}
+                    value={form}
+                    onChange={(e) => setForm(e.target.value)}
+                  >
+                    {FORMS.map((f) => (
+                      <option key={f} value={f} className="capitalize">
+                        {f}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field label="Supplier Cost (KSh)">
+                  <input
+                    className={cn(inputClass, "h-11 w-full min-w-0 text-base sm:text-sm")}
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={costPrice}
+                    onChange={(e) => setCostPrice(e.target.value)}
+                  />
+                </Field>
+
+                <Field label="Selling Price (KSh)">
+                  <input
+                    className={cn(inputClass, "h-11 w-full min-w-0 text-base sm:text-sm font-bold text-teal-950")}
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={unitPrice}
+                    onChange={(e) => setUnitPrice(e.target.value)}
+                    required
+                  />
+                </Field>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field label="Generic name (active ingredient)">
+                  <input
+                    className={cn(inputClass, "h-11 w-full min-w-0 text-base sm:text-sm")}
+                    value={genericName}
+                    onChange={(e) => setGenericName(e.target.value)}
+                    placeholder="e.g. paracetamol"
+                  />
+                </Field>
+                <Field label="Barcode">
+                  <input
+                    className={cn(inputClass, "h-11 w-full min-w-0 text-base sm:text-sm")}
+                    value={barcode}
+                    onChange={(e) => setBarcode(e.target.value)}
+                    placeholder="Scan or type"
+                  />
+                </Field>
+              </div>
+
+              <Field label="Reorder level (warn below this)">
                 <input
-                  className={cn(inputClass, "h-9 w-full text-xs font-bold")}
+                  className={cn(inputClass, "h-11 w-full min-w-0 text-base sm:text-sm")}
                   type="number"
                   min="0"
-                  placeholder="Units to add, e.g. 50"
-                  value={addQty}
-                  onChange={(e) => setAddQty(e.target.value)}
+                  step="1"
+                  value={reorderLevel}
+                  onChange={(e) => setReorderLevel(e.target.value)}
+                  placeholder={String(LOW_STOCK)}
                 />
-                <span className="text-xs text-zinc-500 whitespace-nowrap">
-                  = {medicine.stock + (Number(addQty) || 0)} total units
+              </Field>
+
+              <div className="rounded-xl border border-teal-600/20 bg-teal-50/60 p-3 flex flex-wrap items-center justify-between gap-2">
+                <span className="text-zinc-600">Unit Profit Margin:</span>
+                <span className="font-bold text-teal-950">
+                  {unitProfit >= 0 ? `+${money(unitProfit)}` : money(unitProfit)} ({marginPct}% margin)
                 </span>
               </div>
-            )}
-          </div>
 
-          {error && (
-            <p className="rounded-xl bg-red-50 p-3 text-xs font-medium text-red-700">{error}</p>
-          )}
+              <RxOnlyToggle checked={rxOnly} onChange={setRxOnly} />
 
-          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-zinc-100">
-            <Button variant="ghost" size="sm" type="button" onClick={onClose} className="rounded-xl text-xs">
-              Cancel
-            </Button>
-            <Button size="sm" type="submit" disabled={loading} className="rounded-xl text-xs font-bold px-5">
-              {loading ? "Saving..." : "Save Changes"}
-            </Button>
+              <div className="space-y-2 border-t border-zinc-100 pt-3">
+                <label className="text-xs font-bold text-zinc-700">Stock on Hand</label>
+                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="stockMode"
+                      checked={stockMode === "set"}
+                      onChange={() => setStockMode("set")}
+                      className="accent-teal-700"
+                    />
+                    <span>Set exact quantity</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="stockMode"
+                      checked={stockMode === "add"}
+                      onChange={() => setStockMode("add")}
+                      className="accent-teal-700"
+                    />
+                    <span>+ Restock (add to current {currentMedicine.stock})</span>
+                  </label>
+                </div>
+
+                {stockMode === "set" ? (
+                  <input
+                    className={cn(inputClass, "h-11 w-full min-w-0 text-base sm:text-sm font-bold")}
+                    type="number"
+                    aria-label="Exact stock quantity"
+                    step="1"
+                    required
+                    min="0"
+                    value={stockChanged ? stockValue : String(currentMedicine.stock)}
+                    onChange={(e) => { setStockValue(e.target.value); setStockChanged(true); }}
+                  />
+                ) : (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-bold text-zinc-500">+</span>
+                    <input
+                      className={cn(inputClass, "h-11 w-full min-w-0 text-base sm:text-sm font-bold")}
+                      type="number"
+                      min="0"
+                      aria-label="Units to add"
+                      step="1"
+                      required
+                      placeholder="Units to add, e.g. 50"
+                      value={addQty}
+                      onChange={(e) => { setAddQty(e.target.value); setStockChanged(true); }}
+                    />
+                    <span className="text-xs text-zinc-500 whitespace-nowrap">
+                      = {currentMedicine.stock + (Number(addQty) || 0)} total units
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              </fieldset>
+            </form>
+          </TabsContent>
+          <TabsContent value="batches" className="m-0 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6">
+            <p className="mb-4 text-sm text-zinc-500">Deliveries and write-offs update stock immediately. Use Details & prices to save changes to this medicine.</p>
+            <StockBatchesPanel medicine={currentMedicine} />
+          </TabsContent>
+        </Tabs>
+        <div className="shrink-0 border-t border-zinc-200 bg-white px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6">
+          {error && <p role="alert" className="mb-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+          <div className="flex items-center justify-end gap-3">
+            <Button variant="secondary" type="button" disabled={loading} onClick={onClose} className="flex-1 sm:flex-none">Close</Button>
+            {tab === "details" && <Button type="submit" form="edit-medicine-form" disabled={loading} className="flex-1 sm:flex-none">{loading && <Spinner />}{loading ? "Saving…" : "Save changes"}</Button>}
           </div>
-        </form>
+        </div>
       </div>
-    </div>
+    </dialog>
   );
 }
 

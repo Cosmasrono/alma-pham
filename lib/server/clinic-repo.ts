@@ -1425,75 +1425,95 @@ export async function importMedicines(input: {
   const branchId = input.branchId ?? (await ensureBranchSetup());
   const receiptId = createHash("sha256").update(JSON.stringify([branchId, input.changedById, input.batchId])).digest("hex");
   const fingerprint = createHash("sha256").update(JSON.stringify([input.mode ?? "add_or_update", input.items])).digest("hex");
-  return prisma.$transaction(async (tx) => {
-    const receipt = await tx.medicineImportReceipt.findUnique({ where: { id: receiptId } });
-    if (receipt) {
-      if (receipt.fingerprint !== fingerprint) {
-        return { added: 0, updated: 0, error: "This import batch changed. Select the file again to start a new import." };
-      }
-      return { added: receipt.added, updated: receipt.updated };
-    }
-    const log = {
-      type: "import" as const,
-      byName: input.changedBy,
-      byId: input.changedById,
-      reference: "Bulk import",
+  // Match rows to the catalog in memory. A case-insensitive database lookup per
+  // row is a pattern search, which is slow inside the transaction and can
+  // choke on names with brackets or symbols, e.g. "CEPHALEXIN 100`S (LEOCEF]".
+  const key = (name: string, strength: string) => `${name.trim().toLowerCase()}::${strength.trim().toLowerCase()}`;
+  const catalog = new Map(
+    (await prisma.medicine.findMany({ select: { id: true, name: true, strength: true, unitPrice: true, costPrice: true } }))
+      .map((m) => [key(m.name, m.strength), m]),
+  );
+  try {
+    return await importMedicineBatch();
+  } catch (err) {
+    console.error("importMedicines batch failed", input.batchId, err);
+    const names = input.items.map((i) => i.name).slice(0, 3).join(", ");
+    return {
+      added: 0,
+      updated: 0,
+      error: `Could not import the batch starting with ${names}${input.items.length > 3 ? "…" : ""}. Nothing from this batch was saved.`,
     };
+  }
 
-    let added = 0;
-    let updated = 0;
-    const mode = input.mode ?? "add_or_update";
-
-    for (const item of input.items) {
-      const name = item.name?.trim();
-      if (!name) continue;
-      const strength = item.strength?.trim() ?? "";
-      const form = item.form?.trim() || "tablet";
-      const unitPrice = Math.max(0, Number(item.unitPrice) || 0);
-      const costPrice = Math.max(0, Number(item.costPrice) || 0);
-      const stockQty = Math.max(0, Math.round(Number(item.stock) || 0));
-
-      const existing = await tx.medicine.findFirst({
-        where: {
-          name: { equals: name, mode: "insensitive" },
-          strength: { equals: strength, mode: "insensitive" },
-        },
-      });
-
-      if (existing) {
-        if (mode === "add_only") continue;
-        const newPrice = unitPrice > 0 ? unitPrice : existing.unitPrice;
-        const newCost = costPrice > 0 ? costPrice : existing.costPrice;
-        await tx.medicine.update({
-          where: { id: existing.id },
-          data: { unitPrice: newPrice, costPrice: newCost },
-        });
-        if (newPrice !== existing.unitPrice) {
-          await logInventoryEvent(tx, {
-            ...log,
-            type: "price",
-            medicineId: existing.id,
-            medicineName: `${existing.name} ${existing.strength}`.trim(),
-            branchId,
-            details: `Price KSh ${existing.unitPrice} → ${newPrice} (bulk import)`,
-            flagReason: priceFlag(existing.unitPrice, newPrice, newCost),
-          });
+  function importMedicineBatch() {
+    return prisma.$transaction(async (tx) => {
+      const receipt = await tx.medicineImportReceipt.findUnique({ where: { id: receiptId } });
+      if (receipt) {
+        if (receipt.fingerprint !== fingerprint) {
+          return { added: 0, updated: 0, error: "This import batch changed. Select the file again to start a new import." };
         }
-        await adjustBranchStock(tx, existing.id, branchId, stockQty, log);
-        updated++;
-      } else {
-        if (mode === "restock_only") continue;
-        const created = await tx.medicine.create({
-          data: { name, strength, form, unitPrice, costPrice, stock: 0 },
-        });
-        await adjustBranchStock(tx, created.id, branchId, stockQty, log);
-        added++;
+        return { added: receipt.added, updated: receipt.updated };
       }
-    }
+      const log = {
+        type: "import" as const,
+        byName: input.changedBy,
+        byId: input.changedById,
+        reference: "Bulk import",
+      };
 
-    await tx.medicineImportReceipt.create({ data: { id: receiptId, fingerprint, added, updated } });
-    return { added, updated };
-  }, SALE_TX_OPTIONS);
+      let added = 0;
+      let updated = 0;
+      const mode = input.mode ?? "add_or_update";
+
+      for (const item of input.items) {
+        const name = item.name?.trim();
+        if (!name) continue;
+        const strength = item.strength?.trim() ?? "";
+        const form = item.form?.trim() || "tablet";
+        const unitPrice = Math.max(0, Number(item.unitPrice) || 0);
+        const costPrice = Math.max(0, Number(item.costPrice) || 0);
+        const stockQty = Math.max(0, Math.round(Number(item.stock) || 0));
+
+        const existing = catalog.get(key(name, strength));
+
+        if (existing) {
+          if (mode === "add_only") continue;
+          const newPrice = unitPrice > 0 ? unitPrice : existing.unitPrice;
+          const newCost = costPrice > 0 ? costPrice : existing.costPrice;
+          await tx.medicine.update({
+            where: { id: existing.id },
+            data: { unitPrice: newPrice, costPrice: newCost },
+          });
+          // A second row for the same medicine in this batch sees these prices.
+          catalog.set(key(name, strength), { ...existing, unitPrice: newPrice, costPrice: newCost });
+          if (newPrice !== existing.unitPrice) {
+            await logInventoryEvent(tx, {
+              ...log,
+              type: "price",
+              medicineId: existing.id,
+              medicineName: `${existing.name} ${existing.strength}`.trim(),
+              branchId,
+              details: `Price KSh ${existing.unitPrice} → ${newPrice} (bulk import)`,
+              flagReason: priceFlag(existing.unitPrice, newPrice, newCost),
+            });
+          }
+          await adjustBranchStock(tx, existing.id, branchId, stockQty, log);
+          updated++;
+        } else {
+          if (mode === "restock_only") continue;
+          const created = await tx.medicine.create({
+            data: { name, strength, form, unitPrice, costPrice, stock: 0 },
+          });
+          catalog.set(key(name, strength), { id: created.id, name, strength, unitPrice, costPrice });
+          await adjustBranchStock(tx, created.id, branchId, stockQty, log);
+          added++;
+        }
+      }
+
+      await tx.medicineImportReceipt.create({ data: { id: receiptId, fingerprint, added, updated } });
+      return { added, updated } as { added: number; updated: number; error?: string };
+    }, SALE_TX_OPTIONS);
+  }
 }
 
 /** Empties the medicine catalog — medicines, their batches and per-branch
