@@ -24,7 +24,6 @@ import { BrandLogo } from "@/components/BrandLogo";
 import { DemoVideo } from "@/components/DemoVideo";
 import { MobileNav } from "@/components/MobileNav";
 import { ThemeToggle } from "@/components/ThemeProvider";
-import { PREMISES_REG_NO } from "@/lib/brand";
 
 const NAV_LINKS: [href: string, label: string][] = [
   ["#services", "Services"],
@@ -361,7 +360,7 @@ export default function LandingPage() {
             </p>
             <p className="mt-4 inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium text-teal-900 dark:text-teal-300">
               <Shield className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-              PPB licensed premises · Reg. No. {PREMISES_REG_NO}
+              PPB licensed premises
             </p>
           </div>
         </div>
@@ -601,8 +600,7 @@ export default function LandingPage() {
             </span>
           </div>
           <p className="text-xs text-teal-300/50">
-            © {new Date().getFullYear()} Amla - Medicare Ltd · Premises Reg. No.{" "}
-            {PREMISES_REG_NO}. Powered by{" "}
+            © {new Date().getFullYear()} Amla - Medicare Ltd. Powered by{" "}
             <a
               href="https://nebtech.online"
               className="underline hover:text-teal-300/80"
