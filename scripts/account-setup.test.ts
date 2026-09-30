@@ -7,6 +7,8 @@ import { sendAccountSetupEmail } from "../lib/server/mail";
 import { verifyPassword } from "../lib/auth/password";
 
 test("staff invitations require email and never expose or use an admin-provided password", async () => {
+  const originalSettings = prisma.clinicSettings.findFirst;
+  prisma.clinicSettings.findFirst = (async () => null) as typeof prisma.clinicSettings.findFirst;
   const original = { findUnique: prisma.user.findUnique, findFirst: prisma.user.findFirst, create: prisma.user.create };
   let storedHash = "";
   prisma.user.findUnique = (async () => null) as typeof prisma.user.findUnique;
@@ -27,6 +29,7 @@ test("staff invitations require email and never expose or use an admin-provided 
     assert.equal("tempPassword" in result, false);
     assert.equal(await verifyPassword(input.password, storedHash), false);
   } finally {
+    prisma.clinicSettings.findFirst = originalSettings;
     Object.assign(prisma.user, original);
   }
 });

@@ -25,8 +25,7 @@ interface StaffUser {
   branchId: string | null; // null = every branch (admins) / main (others)
 }
 
-// Roles the admin can hand out. There is only ever one admin (the one who
-// signed up), so it is never offered here.
+// Owner and administrator accounts use approved signup; invite staff here.
 const STAFF_ROLES = ROLES.filter((r) => r !== "admin" && r !== "developer");
 
 const emptyForm = {
@@ -216,7 +215,7 @@ export default function UsersPage() {
                         </button>
                       </td>
                       <td className="px-4 py-2">
-                        {/* One admin only: its role is fixed, and nobody else can become admin. */}
+                        {/* Administrator roles are assigned through approved signup. */}
                         {u.role === "admin" ? (
                           <span className="text-sm font-medium text-teal-900">
                             {ROLE_LABELS.admin}

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/auth/password";
 import { signSession, SESSION_COOKIE, SESSION_MAX_AGE } from "@/lib/auth/jwt";
 import type { Role } from "@/lib/auth/roles";
-import { developerLogin, lockMessageFor, systemLock } from "@/lib/server/developer";
+import { lockMessageFor, systemLock } from "@/lib/server/developer";
 
 export const runtime = "nodejs";
 
@@ -18,14 +18,7 @@ export async function POST(req: Request) {
       .toLowerCase();
     const password = body.password;
 
-    // The developer's support account comes from .env, not the database, and
-    // always gets in — it's the one that can unlock a locked system.
-    const developer = identifier
-      ? await developerLogin(identifier, String(password ?? ""))
-      : null;
-    if (developer) {
-      return withSession(await signSession(developer), developer.name, developer.role);
-    }
+    // Developer accounts sign in at the unlinked /dev-access page, not here.
 
     // Guarded: a blank identifier would otherwise match the email-less users
     // created by the seed script, whose `email` is null.

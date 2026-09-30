@@ -9,13 +9,15 @@ import { canAccess, canView, hasPermission, homeForRole } from "@/lib/auth/roles
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Public pages: the landing page, the password-reset pages, plus auth
+  // Public pages: the landing page, the password-reset pages, the unlinked
+  // developer access page, plus auth
   // endpoints (login / logout) and the M-Pesa callback, which Safaricom posts
   // to without any session.
   if (
     pathname === "/" ||
     pathname === "/forgot-password" ||
     pathname === "/reset-password" ||
+    pathname === "/dev-access" ||
     pathname.startsWith("/api/auth") ||
     pathname === "/api/mpesa/callback"
   ) {

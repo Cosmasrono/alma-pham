@@ -11,7 +11,7 @@ type Mode = "loading" | "login" | "setup";
 export default function LoginPage() {
   const [mode, setMode] = useState<Mode>("loading");
 
-  // Until the one admin has signed up, show the admin sign-up form instead.
+  // New installations start with signup; existing users can always sign in.
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -37,6 +37,11 @@ export default function LoginPage() {
       )}
       {mode === "setup" && <SetupForm />}
       {mode === "login" && <LoginForm />}
+      {mode !== "loading" && (
+        <button type="button" className="mt-4 text-sm font-medium text-teal-700 hover:underline" onClick={() => setMode(mode === "setup" ? "login" : "setup")}>
+          {mode === "setup" ? "Already have an account? Sign in" : "Owner or administrator? Sign up"}
+        </button>
+      )}
     </AuthCard>
   );
 }
@@ -82,7 +87,7 @@ function LoginForm() {
         Sign in
       </h1>
       <p className="mb-5 text-sm text-zinc-500 dark:text-zinc-400">
-        Enter the username or email and password your administrator gave you.
+        Enter your username or email and the password you chose.
       </p>
       <form onSubmit={submit} className="flex flex-col gap-4">
         <Field label="Email or username">
@@ -234,11 +239,11 @@ function SetupForm() {
   return (
     <>
       <h1 className="mb-1 font-display text-xl font-semibold text-teal-950">
-        Admin sign up
+        Owner / administrator sign up
       </h1>
       <p className="mb-5 text-sm text-zinc-500">
-        Create the administrator account. There is only one admin, and it adds
-        every other staff member. We&apos;ll email you a code to confirm the address.
+        Only the owner and approved administrator email can sign up.
+        All other staff are invited by an administrator. We&apos;ll email you a code to confirm your address.
       </p>
       <form onSubmit={sendCode} className="flex flex-col gap-4">
         <Field label="Your full name">

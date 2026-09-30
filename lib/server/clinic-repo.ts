@@ -3,6 +3,8 @@
 import { createHash, randomBytes, randomInt } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { ROLES, type Role } from "@/lib/auth/roles";
+import { isOwnerEmail, signupAllowed } from "@/lib/auth/owner";
+import { isDeveloperEmail } from "@/lib/server/developer";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { mpesaConfigured } from "@/lib/server/mpesa";
 import { type BranchContext, ensureBranchSetup, mapBranch } from "@/lib/server/branches";
@@ -886,9 +888,8 @@ export async function userCount(): Promise<number> {
 
 // --- one-time admin sign-up ---------------------------------------------------
 //
-// Only one admin ever signs up: the form is open only while the system has no
-// accounts. Every other account is created by that admin. The sign-up waits
-// in AdminSignup until the code emailed to the admin is entered.
+// Only the client's owner and admin emails configured in ClinicSettings may
+// sign up. Both use the admin role; other staff receive invitations.
 
 const SIGNUP_CODE_TTL_MS = 15 * 60 * 1000;
 const SIGNUP_RESEND_MS = 60 * 1000;
@@ -901,9 +902,6 @@ export async function startAdminSignup(input: {
   email: string;
   password: string;
 }): Promise<{ error: string } | { code: string; email: string; name: string }> {
-  if ((await prisma.user.count()) > 0) {
-    return { error: "An administrator already exists. Please sign in." };
-  }
   const username = String(input.username ?? "").trim().toLowerCase();
   const name = String(input.name ?? "").trim();
   const password = String(input.password ?? "");
@@ -919,14 +917,16 @@ export async function startAdminSignup(input: {
   if (!email || !validEmail(email)) {
     return { error: "A valid email address is required." };
   }
+  if (!(await signupAllowed(email))) return { error: "Signup is restricted to the owner and approved administrator. Ask your administrator for a staff invitation." };
+  if (await emailTaken(email)) return { error: "An account already exists for this email. Please sign in or reset your password." };
+  if (await prisma.user.findUnique({ where: { username } })) return { error: "That username is already taken." };
 
   const recent = await prisma.adminSignup.findUnique({ where: { email } });
   if (recent && Date.now() - recent.createdAt.getTime() < SIGNUP_RESEND_MS) {
     return { error: "A code was just sent. Wait a minute before asking for another." };
   }
 
-  // Only one sign-up is in flight at a time; a new one replaces any other.
-  await prisma.adminSignup.deleteMany({});
+  await prisma.adminSignup.deleteMany({ where: { email } });
   const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
   await prisma.adminSignup.create({
     data: {
@@ -946,10 +946,8 @@ export async function verifyAdminSignup(
   rawEmail: string,
   rawCode: string,
 ): Promise<{ error: string } | { user: StaffUser }> {
-  if ((await prisma.user.count()) > 0) {
-    return { error: "An administrator already exists. Please sign in." };
-  }
   const email = cleanEmail(rawEmail);
+  if (!email || !(await signupAllowed(email))) return { error: "Signup is restricted to the owner and approved administrator." };
   const code = String(rawCode ?? "").trim();
   const pending = email
     ? await prisma.adminSignup.findUnique({ where: { email } })
@@ -978,18 +976,30 @@ export async function verifyAdminSignup(
     };
   }
 
-  const user = await prisma.user.create({
-    data: {
-      username: pending.username,
-      email: pending.email,
-      name: pending.name,
-      role: "admin",
-      passwordHash: pending.passwordHash,
-      active: true,
-    },
+  return prisma.$transaction(async (tx) => {
+    // Claim this exact code once; concurrent verification cannot create two users.
+    const claim = await tx.adminSignup.deleteMany({
+      where: {
+        id: pending.id,
+        codeHash: pending.codeHash,
+        attempts: { lt: SIGNUP_MAX_ATTEMPTS },
+        expiresAt: { gt: new Date() },
+      },
+    });
+    if (claim.count !== 1) return { error: "This code has already been used or expired. Please start again." };
+    if (await tx.user.findFirst({ where: { OR: [{ email }, { username: pending.username }] } })) return { error: "An account with this email or username already exists. Please sign in." };
+    const user = await tx.user.create({
+      data: {
+        username: pending.username,
+        email: pending.email,
+        name: pending.name,
+        role: "admin",
+        passwordHash: pending.passwordHash,
+        active: true,
+      },
+    });
+    return { user: mapUser(user) };
   });
-  await prisma.adminSignup.deleteMany({});
-  return { user: mapUser(user) };
 }
 
 export async function listUsers(): Promise<StaffUser[]> {
@@ -1010,7 +1020,7 @@ export async function createUser(input: {
     return { error: "Username and name are required." };
   }
   if (input.role === "admin") {
-    return { error: "There can only be one administrator." };
+    return { error: "The owner and approved administrator must use email-verified signup." };
   }
   if (!ROLES.includes(input.role) || input.role === "developer") return { error: "Choose a valid staff role." };
   const branch = await validBranchId(input.branchId);
@@ -1020,6 +1030,8 @@ export async function createUser(input: {
 
   const email = cleanEmail(input.email);
   if (!email || !validEmail(email)) return { error: "A valid email address is required to send the password setup link." };
+  if (isDeveloperEmail(email)) return { error: "This email is reserved for developer access." };
+  if (await signupAllowed(email)) return { error: "This email is reserved for owner or administrator signup." };
   if (await emailTaken(email)) return { error: "That email is already used by another account." };
 
   // This random password is never shared. Staff choose their own through email.
@@ -1054,12 +1066,13 @@ export async function updateUser(input: {
     email?: string | null;
     branchId?: string | null;
   } = {};
-  // Keep exactly one admin: nobody is promoted to admin, and the admin can't
-  // be demoted or switched off (that would leave the clinic with no admin).
+  // Administrator access is assigned through approved signup only.
+  // Protect administrators from being demoted or switched off here.
   const target = await prisma.user.findUnique({ where: { id: input.id } });
   if (!target) return { error: "User not found." };
+  if (input.role && (!ROLES.includes(input.role) || input.role === "developer")) return { error: "Choose a valid staff role." };
   if (input.role && input.role !== target.role) {
-    if (input.role === "admin") return { error: "There can only be one administrator." };
+    if (input.role === "admin") return { error: "Administrators must use approved email signup." };
     if (target.role === "admin") return { error: "The administrator's role can't be changed." };
   }
   if (target.role === "admin" && input.active === false) {
@@ -1075,6 +1088,8 @@ export async function updateUser(input: {
   if (input.password) data.passwordHash = await hashPassword(input.password);
   if (input.email !== undefined) {
     const email = cleanEmail(input.email);
+    if ((await isOwnerEmail(target.email)) && email !== cleanEmail(target.email)) return { error: "The owner's email cannot be changed." };
+    if (email !== cleanEmail(target.email) && email && await signupAllowed(email)) return { error: "This email is reserved for owner or administrator signup." };
     if (email && (await emailTaken(email, input.id))) {
       return { error: "That email is already used by another account." };
     }
@@ -1094,7 +1109,7 @@ export async function deleteUser(
 ): Promise<{ error: string } | { ok: true }> {
   const user = await prisma.user.findUnique({ where: { id } });
   if (!user) return { error: "User not found." };
-  if (user.email?.toLowerCase() === "ccosmas001@gmail.com") {
+  if (await isOwnerEmail(user.email)) {
     return { error: "This user cannot be deleted." };
   }
   await prisma.user.delete({ where: { id } });

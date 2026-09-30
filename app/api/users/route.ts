@@ -4,11 +4,11 @@ import { NextResponse } from "next/server";
 import * as repo from "@/lib/server/clinic-repo";
 import { getSession } from "@/lib/auth/session";
 import { canView, hasPermission } from "@/lib/auth/roles";
+import { isOwnerEmail } from "@/lib/auth/owner";
 import { mailConfigured, sendAccountSetupEmail } from "@/lib/server/mail";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-const SUPER_ADMIN_EMAIL = "ccosmas001@gmail.com";
 
 async function ensureCanManageUsers() {
   const session = await getSession();
@@ -17,7 +17,7 @@ async function ensureCanManageUsers() {
 
 async function isSuperAdminSession(userId: string): Promise<boolean> {
   const user = await repo.getUserById(userId);
-  return user?.email?.toLowerCase() === SUPER_ADMIN_EMAIL;
+  return isOwnerEmail(user?.email);
 }
 
 export async function GET() {
@@ -57,10 +57,15 @@ async function sendSetupLink(user: { email: string | null; name: string; usernam
 }
 
 export async function PATCH(req: Request) {
-  if (!(await ensureCanManageUsers())) {
+  const session = await ensureCanManageUsers();
+  if (!session) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   const body = await req.json();
+  const target = typeof body.id === "string" && /^[a-f0-9]{24}$/i.test(body.id) ? await repo.getUserById(body.id) : null;
+  if ((await isOwnerEmail(target?.email)) && !(await isSuperAdminSession(session.id))) {
+    return NextResponse.json({ error: "Only the owner can change the owner account." }, { status: 403 });
+  }
   if (body.action === "send-setup-link") {
     if (!mailConfigured()) return NextResponse.json({ error: "Outgoing email is not configured." }, { status: 503 });
     if (typeof body.id !== "string" || !/^[a-f0-9]{24}$/i.test(body.id)) return NextResponse.json({ error: "Invalid user." }, { status: 400 });
@@ -96,7 +101,7 @@ export async function DELETE(req: Request) {
   const { id } = await req.json();
   const user = await repo.getUserById(id);
 
-  if (user?.email?.toLowerCase() === SUPER_ADMIN_EMAIL) {
+  if (await isOwnerEmail(user?.email)) {
     return NextResponse.json(
       { error: "This user cannot be deleted." },
       { status: 403 }

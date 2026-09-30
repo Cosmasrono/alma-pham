@@ -137,7 +137,10 @@ export async function sendAdminSignupCodeEmail(opts: {
   to: string;
   name: string;
   code: string;
+  /** Which account the code creates, e.g. "developer". */
+  account?: string;
 }): Promise<void> {
+  const account = opts.account ?? "administrator";
   const from = `"${process.env.MAIL_FROM_NAME ?? "Amla Medicare"}" <${
     process.env.MAIL_FROM_ADDRESS ?? process.env.MAIL_USERNAME
   }>`;
@@ -149,7 +152,7 @@ export async function sendAdminSignupCodeEmail(opts: {
     text: [
       `Hi ${opts.name},`,
       "",
-      "Use this code to finish creating the Amla Medicare administrator account:",
+      `Use this code to finish creating the Amla Medicare ${account} account:`,
       "",
       `  ${opts.code}`,
       "",
@@ -160,7 +163,7 @@ export async function sendAdminSignupCodeEmail(opts: {
         <h2 style="color:#134e4a;margin:0 0 12px">Verify your email</h2>
         <p style="color:#3f3f46;line-height:1.6">Hi ${opts.name},</p>
         <p style="color:#3f3f46;line-height:1.6">
-          Use this code to finish creating the Amla Medicare administrator account.
+          Use this code to finish creating the Amla Medicare ${account} account.
           It expires in <strong>15 minutes</strong>.
         </p>
         <p style="margin:24px 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:32px;font-weight:700;letter-spacing:8px;color:#134e4a">

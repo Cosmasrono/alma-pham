@@ -222,13 +222,35 @@ model StockTransfer {
 
 // A single-use password-reset link. We store only the SHA-256 of the token;
 // the plaintext token exists solely in the emailed link.
-// The one-time admin sign-up, parked here until the emailed code is entered.
-// Only exists while the system has no accounts; the User is created on verify.
+// An approved owner/admin sign-up, pending email verification.
 model AdminSignup {
   id           String   @id @default(auto()) @map("_id") @db.ObjectId
   name         String
   username     String
   email        String   @unique
+  passwordHash String
+  codeHash     String
+  expiresAt    DateTime
+  attempts     Int      @default(0)
+  createdAt    DateTime @default(now())
+}
+
+// The software vendor's view-only accounts, signed up at the unlinked
+// /dev-access page by an email listed in DEVELOPER_EMAIL. Kept apart from User
+// so clinic admins never see or manage them.
+model DeveloperAccount {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+// A developer sign-up, pending email verification.
+model DeveloperSignup {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  email        String   @unique
+  name         String
   passwordHash String
   codeHash     String
   expiresAt    DateTime
@@ -486,6 +508,9 @@ model Order {
 // consultation gate (0 to skip).
 model ClinicSettings {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  // The client's owner and administrator: the only emails allowed to sign up.
+  ownerEmail       String?
+  adminSignupEmail String?
   billingMode     String   @default("per-stage") // per-stage | pay-at-end
   consultationFee Float    @default(0)
   // The developer's master switch: while locked, no clinic account can sign

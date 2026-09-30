@@ -1,4 +1,4 @@
-// One-time admin sign-up. GET tells the login screen whether any account
+// Restricted owner/admin sign-up. GET tells the login screen whether any account
 // exists yet; POST starts the sign-up and emails a 6-digit code. The account
 // is only created once that code is entered (see ./verify).
 import { NextResponse } from "next/server";

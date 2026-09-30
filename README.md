@@ -18,6 +18,25 @@ Open [http://localhost:3001](http://localhost:3001) with your browser to see the
 
 ## Staff invitations
 
+Three kinds of account:
+
+- **Developer (you, the vendor)** — signs up and signs in at `/dev-access`,
+  a page that is not linked anywhere in the app and is hidden from search
+  engines. The first person to sign up there becomes the developer, with any
+  email; signup then closes, except for extra emails listed in
+  `DEVELOPER_EMAIL` in `.env` (comma-separated). Developer accounts are stored apart from clinic users, so admins
+  never see them. Sees every page read-only and cannot change clinic data.
+- **Owner and administrator (the client)** — the only emails allowed to sign
+  up. Both get the admin role after verifying an emailed code. Only the owner
+  can delete accounts.
+- **Staff** — invited by an administrator from **Users**; they set their own
+  password from the emailed link.
+
+When installing for a client, name their owner and administrator with:
+`pnpm exec tsx --env-file=.env scripts/configure-signup.ts --owner owner@client.com --admin admin@client.com`.
+Either flag may be omitted to leave that email unchanged. This does not change
+existing account passwords.
+
 Set `APP_URL` to the public website address staff can open from their devices
 (for example, `https://clinic.example.com`). A localhost URL only works on the
 computer running the app. Configure `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`,

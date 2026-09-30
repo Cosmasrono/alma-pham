@@ -6,10 +6,7 @@ import Link from "next/link";
 import {
   Stethoscope,
   FlaskConical,
-  Scissors,
   Pill,
-  BedDouble,
-  Users,
   Clock,
   Banknote,
   UserCheck,
@@ -40,7 +37,7 @@ const NAV_LINKS: [href: string, label: string][] = [
 const DEMO_VIDEO_ID = "Z0E-YOhU7tE";
 
 // WhatsApp contact number — update to the clinic's real number
-const WHATSAPP_NUMBER = "254757450716"; // 0757450716 in international format
+const WHATSAPP_NUMBER = "254796268600";
 const WHATSAPP_MESSAGE = encodeURIComponent(
   "Hello Amla Medicare! I would like to book an appointment or get more information about your services."
 );
@@ -62,32 +59,11 @@ const SERVICES: { title: string; text: string; img: string; alt: string; Icon: L
     Icon: FlaskConical,
   },
   {
-    title: "Procedures & Theatre",
-    text: "A fully equipped modern theatre for minor and day-case procedures, with careful follow-up.",
-    img: "/images/theatre.jpg",
-    alt: "Modern operating theatre",
-    Icon: Scissors,
-  },
-  {
-    title: "Pharmacy",
-    text: "Prescriptions are dispensed in-house the moment your doctor signs them off.",
+    title: "In-house Pharmacy & Community Pharmacy",
+    text: "Our in-house pharmacy serves clinic patients, while our community pharmacy welcomes walk-in customers for prescriptions and everyday medicine needs.",
     img: "/images/amla-pharmacy.jpg",
     alt: "Well-stocked medicine shelves at the Amla Medicare pharmacy",
     Icon: Pill,
-  },
-  {
-    title: "Inpatient Ward",
-    text: "Clean, calm recovery beds for patients who need observation or a longer stay.",
-    img: "/images/ward.jpg",
-    alt: "Bright hospital ward with beds",
-    Icon: BedDouble,
-  },
-  {
-    title: "Surgical Team",
-    text: "Surgeons, anaesthetists and theatre nurses who have worked together for years.",
-    img: "/images/operation.jpg",
-    alt: "Surgeons performing an operation",
-    Icon: Users,
   },
 ];
 
@@ -209,30 +185,13 @@ export default function LandingPage() {
         <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 sm:px-6 lg:grid-cols-2 lg:py-20">
           <div>
             <h1 className="font-display text-4xl font-semibold tracking-tight text-teal-950 sm:text-[3.25rem] sm:leading-[1.07]">
-              Your health, handled{" "}
-              <span className="relative whitespace-nowrap">
-                <span className="relative z-10 text-teal-700">
-                  under one roof
-                </span>
-                <svg
-                  aria-hidden
-                  viewBox="0 0 280 12"
-                  className="absolute -bottom-1 left-0 w-full"
-                  preserveAspectRatio="none"
-                >
-                  <path
-                    d="M4 8 Q70 2 140 6 Q210 10 276 4"
-                    stroke="#5eead4"
-                    strokeWidth="3"
-                    fill="none"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </span>
+              <span className="block">Amla-Medicare Ltd</span>
+              <span className="block text-teal-700">Pharmacy</span>
+              <span className="block text-teal-700">Clinic &amp; Diagnostics</span>
             </h1>
 
             <p className="mt-5 max-w-lg text-base leading-7 text-zinc-500">
-              Amla Medicare is a full-service outpatient clinic in Nairobi. One
+              Amla Medicare is a full-service outpatient clinic at Kanduma Centre, Kikuyu. One
               visit covers your consultation, lab work, imaging and medication —
               no referrals, no second trips, no losing your file between
               departments.
@@ -307,15 +266,6 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="absolute -right-4 top-6 hidden w-28 overflow-hidden rounded-2xl border-4 border-white shadow-lg shadow-teal-950/15 sm:block">
-              <Image
-                src="/images/team.jpg"
-                alt="Surgical team looking down in a circle"
-                width={400}
-                height={400}
-                className="h-full w-full object-cover"
-              />
-            </div>
           </div>
         </div>
       </section>
@@ -406,7 +356,7 @@ export default function LandingPage() {
             </h2>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
               Walk in for outpatient care: pharmacy, consultation, immunization,
-              minor surgery and stitches, blood pressure and diabetic clinics,
+              blood pressure and diabetic clinics,
               family planning and counselling. Pay by M-Pesa or cash.
             </p>
             <p className="mt-4 inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium text-teal-900 dark:text-teal-300">
@@ -570,20 +520,20 @@ export default function LandingPage() {
                   Chat on WhatsApp
                 </a>
                 <a
-                  href="tel:0757450716"
+                  href="tel:+254796268600"
                   className="inline-flex h-12 items-center gap-2.5 rounded-full border border-white/20 bg-white/10 px-6 text-sm font-semibold text-white backdrop-blur transition-all hover:bg-white/20 hover:-translate-y-0.5"
                 >
                   <Phone className="h-4 w-4" />
-                  0757 450 716
+                  +254 796 268600
                 </a>
               </div>
               <p className="mt-4 text-xs text-teal-300/60">
                 Or email{" "}
                 <a
-                  href="mailto:ccosmas001@gmail.com"
+                  href="mailto:amla.medicare@outlook.com"
                   className="font-medium text-teal-300 underline"
                 >
-                  ccosmas001@gmail.com
+                  amla.medicare@outlook.com
                 </a>
               </p>
             </div>
@@ -599,7 +549,7 @@ export default function LandingPage() {
                 {
                   Icon: MapPin,
                   title: "Location",
-                  body: "Nairobi, Kenya\nEasy walk-in access",
+                  body: "Kanduma Centre, Kikuyu",
                 },
                 {
                   Icon: Wallet,
