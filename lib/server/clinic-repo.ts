@@ -1030,7 +1030,7 @@ export async function createUser(input: {
 
   const email = cleanEmail(input.email);
   if (!email || !validEmail(email)) return { error: "A valid email address is required to send the password setup link." };
-  if (isDeveloperEmail(email)) return { error: "This email is reserved for developer access." };
+  if (await isDeveloperEmail(email)) return { error: "This email is reserved for developer access." };
   if (await signupAllowed(email)) return { error: "This email is reserved for owner or administrator signup." };
   if (await emailTaken(email)) return { error: "That email is already used by another account." };
 

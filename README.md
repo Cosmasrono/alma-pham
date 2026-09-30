@@ -20,12 +20,12 @@ Open [http://localhost:3001](http://localhost:3001) with your browser to see the
 
 Three kinds of account:
 
-- **Developer (you, the vendor)** — signs up and signs in at `/dev-access`,
-  a page that is not linked anywhere in the app and is hidden from search
-  engines. The first person to sign up there becomes the developer, with any
-  email; signup then closes, except for extra emails listed in
-  `DEVELOPER_EMAIL` in `.env` (comma-separated). Developer accounts are stored apart from clinic users, so admins
-  never see them. Sees every page read-only and cannot change clinic data.
+- **Developer (you, the vendor)** — exactly one account. While none exists,
+  the sign-in page shows **Are you a developer?**, which leads to a one-time
+  signup (any email, verified by code). Once the account exists that link
+  disappears and signup closes; the developer signs in on the normal sign-in
+  page. The account is stored apart from clinic users, so admins never see it.
+  Sees every page read-only and cannot change clinic data.
 - **Owner and administrator (the client)** — the only emails allowed to sign
   up. Both get the admin role after verifying an emailed code. Only the owner
   can delete accounts.

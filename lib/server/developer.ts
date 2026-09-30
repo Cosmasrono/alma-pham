@@ -30,12 +30,13 @@ export async function developerLogin(identifier: string, password: string): Prom
   };
 }
 
-// --- developer accounts (the unlinked /dev-access page) -----------------------
+// --- the developer account ------------------------------------------------------
 //
-// The first person to sign up becomes the developer, whatever their email;
-// signup then closes, except for emails listed in DEVELOPER_EMAIL
-// (comma-separated). The accounts live apart from clinic users, and every
-// session is view-only.
+// Exactly one. The first person to sign up at /dev-access (linked from the
+// sign-in page as "Are you a developer?") becomes the developer, whatever
+// their email; the link and signup then close for good, and the developer
+// signs in on the normal sign-in page. The account lives apart from clinic
+// users, and every session is view-only.
 
 const CODE_TTL_MS = 15 * 60 * 1000;
 const RESEND_MS = 60 * 1000;
@@ -45,26 +46,22 @@ function cleanEmail(raw: unknown): string {
   return String(raw ?? "").trim().toLowerCase();
 }
 
-export function isDeveloperEmail(raw: unknown): boolean {
+/** Is this the developer account's email? Clinic accounts can't use it. */
+export async function isDeveloperEmail(raw: unknown): Promise<boolean> {
   const email = cleanEmail(raw);
-  if (!email) return false;
-  return (process.env.DEVELOPER_EMAIL ?? "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .includes(email);
+  return Boolean(email && (await prisma.developerAccount.findUnique({ where: { email } })));
 }
 
-/** Is developer signup open to this email? Always, until the first account exists. */
-export async function developerSignupOpen(raw?: unknown): Promise<boolean> {
-  if ((await prisma.developerAccount.count()) === 0) return true;
-  return raw !== undefined && isDeveloperEmail(raw);
+/** Developer signup is open only until the one developer account exists. */
+export async function developerSignupOpen(): Promise<boolean> {
+  return (await prisma.developerAccount.count()) === 0;
 }
 
 function developerSession(email: string, name: string): SessionUser {
   return { id: DEVELOPER_ID, username: email, name, role: "developer" };
 }
 
-/** Step 1: email a code to an allowed developer address. */
+/** Step 1: email a code to the would-be developer. */
 export async function startDeveloperSignup(input: {
   name?: unknown;
   email?: unknown;
@@ -75,10 +72,7 @@ export async function startDeveloperSignup(input: {
   const password = String(input.password ?? "");
   if (!name || !email || !password) return { error: "Name, email and password are all required." };
   if (password.length < 12) return { error: "Choose a password of at least 12 characters." };
-  if (await prisma.developerAccount.findUnique({ where: { email } })) {
-    return { error: "A developer account already exists for this email. Please sign in." };
-  }
-  if (!(await developerSignupOpen(email))) return { error: "Developer signup is closed." };
+  if (!(await developerSignupOpen())) return { error: "Developer signup is closed." };
   const recent = await prisma.developerSignup.findUnique({ where: { email } });
   if (recent && Date.now() - recent.createdAt.getTime() < RESEND_MS) {
     return { error: "A code was just sent. Wait a minute before asking for another." };
@@ -104,7 +98,7 @@ export async function verifyDeveloperSignup(
 ): Promise<{ error: string } | { session: SessionUser }> {
   const email = cleanEmail(rawEmail);
   const code = String(rawCode ?? "").trim();
-  if (!(await developerSignupOpen(email))) return { error: "Developer signup is closed." };
+  if (!(await developerSignupOpen())) return { error: "Developer signup is closed." };
   const pending = await prisma.developerSignup.findUnique({ where: { email } });
   if (!pending) return { error: "No sign-up is waiting for that email. Please start again." };
   if (pending.expiresAt.getTime() < Date.now() || pending.attempts >= MAX_ATTEMPTS) {
@@ -122,11 +116,8 @@ export async function verifyDeveloperSignup(
       where: { id: pending.id, codeHash: pending.codeHash, attempts: { lt: MAX_ATTEMPTS }, expiresAt: { gt: new Date() } },
     });
     if (claim.count !== 1) return { error: "This code has already been used or expired. Please start again." };
-    if (await tx.developerAccount.findUnique({ where: { email } })) {
-      return { error: "A developer account already exists for this email. Please sign in." };
-    }
-    // Two first-time signups racing: only one may take the open slot.
-    if ((await tx.developerAccount.count()) > 0 && !isDeveloperEmail(email)) return { error: "Developer signup is closed." };
+    // Two signups racing: only one may take the single developer slot.
+    if ((await tx.developerAccount.count()) > 0) return { error: "Developer signup is closed." };
     const account = await tx.developerAccount.create({
       data: { email, name: pending.name, passwordHash: pending.passwordHash },
     });
@@ -134,7 +125,7 @@ export async function verifyDeveloperSignup(
   });
 }
 
-/** Sign in at /dev-access: a developer account, or the .env credentials. */
+/** The developer session for these credentials (the account, or .env), or null. */
 export async function developerAccountLogin(identifier: unknown, password: unknown): Promise<SessionUser | null> {
   const email = cleanEmail(identifier);
   const pass = String(password ?? "");

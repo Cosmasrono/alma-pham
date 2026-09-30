@@ -10,15 +10,21 @@ type Mode = "loading" | "login" | "setup";
 
 export default function LoginPage() {
   const [mode, setMode] = useState<Mode>("loading");
+  // "Are you a developer?" shows only until the one developer account exists.
+  const [developerSignupOpen, setDeveloperSignupOpen] = useState(false);
 
   // New installations start with signup; existing users can always sign in.
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
-        const res = await fetch("/api/auth/bootstrap");
-        const { needsSetup } = await res.json();
-        if (alive) setMode(needsSetup ? "setup" : "login");
+        const [setup, developer] = await Promise.all([
+          fetch("/api/auth/bootstrap").then((r) => r.json()),
+          fetch("/api/auth/developer").then((r) => r.json()).catch(() => ({})),
+        ]);
+        if (!alive) return;
+        setMode(setup.needsSetup ? "setup" : "login");
+        setDeveloperSignupOpen(developer.signupOpen === true);
       } catch {
         if (alive) setMode("login");
       }
@@ -41,6 +47,11 @@ export default function LoginPage() {
         <button type="button" className="mt-4 text-sm font-medium text-teal-700 hover:underline" onClick={() => setMode(mode === "setup" ? "login" : "setup")}>
           {mode === "setup" ? "Already have an account? Sign in" : "Owner or administrator? Sign up"}
         </button>
+      )}
+      {mode !== "loading" && developerSignupOpen && (
+        <a href="/dev-access" className="mt-2 block text-xs text-zinc-400 hover:text-teal-700 hover:underline">
+          Are you a developer?
+        </a>
       )}
     </AuthCard>
   );

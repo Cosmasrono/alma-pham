@@ -9,6 +9,8 @@ import { verifyPassword } from "../lib/auth/password";
 test("staff invitations require email and never expose or use an admin-provided password", async () => {
   const originalSettings = prisma.clinicSettings.findFirst;
   prisma.clinicSettings.findFirst = (async () => null) as typeof prisma.clinicSettings.findFirst;
+  const originalDeveloper = prisma.developerAccount.findUnique;
+  prisma.developerAccount.findUnique = (async () => null) as typeof prisma.developerAccount.findUnique;
   const original = { findUnique: prisma.user.findUnique, findFirst: prisma.user.findFirst, create: prisma.user.create };
   let storedHash = "";
   prisma.user.findUnique = (async () => null) as typeof prisma.user.findUnique;
@@ -30,6 +32,7 @@ test("staff invitations require email and never expose or use an admin-provided 
     assert.equal(await verifyPassword(input.password, storedHash), false);
   } finally {
     prisma.clinicSettings.findFirst = originalSettings;
+    prisma.developerAccount.findUnique = originalDeveloper;
     Object.assign(prisma.user, original);
   }
 });

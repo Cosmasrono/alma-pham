@@ -6,12 +6,11 @@ import { Button, Field, Spinner, inputClass } from "@/components/ui";
 import { homeForRole } from "@/lib/auth/roles";
 import { notify } from "@/lib/toast";
 
-type Mode = "login" | "signup" | "verify";
+// "loading" until we know whether the one developer slot is still free.
+type Mode = "loading" | "closed" | "signup" | "verify";
 
 export function DevAccess() {
-  const [mode, setMode] = useState<Mode>("login");
-  // Signup is open until the first developer account exists.
-  const [signupOpen, setSignupOpen] = useState(false);
+  const [mode, setMode] = useState<Mode>("loading");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,11 +22,8 @@ export function DevAccess() {
   useEffect(() => {
     fetch("/api/auth/developer")
       .then((r) => r.json())
-      .then((b: { signupOpen?: boolean }) => {
-        setSignupOpen(b.signupOpen === true);
-        if (b.signupOpen) setMode("signup");
-      })
-      .catch(() => {});
+      .then((b: { signupOpen?: boolean }) => setMode(b.signupOpen ? "signup" : "closed"))
+      .catch(() => setMode("closed"));
   }, []);
 
   const fail = (message: string) => {
@@ -57,16 +53,6 @@ export function DevAccess() {
     }
   };
 
-  const signedIn = () => {
-    notify("success", "Signed in as developer (view only).");
-    window.location.href = homeForRole("developer");
-  };
-
-  const login = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (await call({ action: "login", email, password })) signedIn();
-  };
-
   const sendCode = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (password !== confirm) return fail("The passwords don't match.");
@@ -81,35 +67,26 @@ export function DevAccess() {
 
   const verify = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (await call({ action: "verify", email, code })) signedIn();
-  };
-
-  const switchTo = (next: Mode) => {
-    setMode(next);
-    setError(null);
+    if (!(await call({ action: "verify", email, code }))) return;
+    notify("success", "Developer account created. You're signed in (view only).");
+    window.location.href = homeForRole("developer");
   };
 
   const errorBox = error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>;
 
   return (
     <AuthCard>
-      {mode === "login" && (
+      {mode === "loading" && (
+        <p className="flex items-center justify-center gap-2 py-8 text-sm text-zinc-400">
+          <Spinner /> Loading…
+        </p>
+      )}
+
+      {mode === "closed" && (
         <>
-          <h1 className="mb-1 font-display text-xl font-semibold text-teal-950 dark:text-zinc-100">Developer sign in</h1>
-          <p className="mb-5 text-sm text-zinc-500 dark:text-zinc-400">View-only access for system support.</p>
-          <form onSubmit={login} className="flex flex-col gap-4">
-            <Field label="Email">
-              <input className={inputClass} type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoFocus autoComplete="username" required />
-            </Field>
-            <Field label="Password">
-              <input className={inputClass} type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
-            </Field>
-            {errorBox}
-            <Button type="submit" disabled={busy} className="w-full">
-              {busy && <Spinner />}
-              {busy ? "Signing in…" : "Sign in"}
-            </Button>
-          </form>
+          <h1 className="mb-1 font-display text-xl font-semibold text-teal-950 dark:text-zinc-100">Page not available</h1>
+          <p className="mb-5 text-sm text-zinc-500 dark:text-zinc-400">Please use the sign-in page.</p>
+          <a href="/login" className="text-sm font-medium text-teal-700 hover:underline">Go to sign in</a>
         </>
       )}
 
@@ -117,7 +94,8 @@ export function DevAccess() {
         <>
           <h1 className="mb-1 font-display text-xl font-semibold text-teal-950 dark:text-zinc-100">Developer sign up</h1>
           <p className="mb-5 text-sm text-zinc-500 dark:text-zinc-400">
-            The first account created here becomes the developer account. We&apos;ll email you a code to confirm your address.
+            Only one developer account can exist. It sees everything but can&apos;t change clinic data.
+            Afterwards, sign in on the normal sign-in page. We&apos;ll email you a code to confirm your address.
           </p>
           <form onSubmit={sendCode} className="flex flex-col gap-4">
             <Field label="Your full name">
@@ -138,6 +116,7 @@ export function DevAccess() {
               {busy ? "Sending code…" : "Send verification code"}
             </Button>
           </form>
+          <a href="/login" className="mt-4 block text-sm font-medium text-teal-700 hover:underline">← Back to sign in</a>
         </>
       )}
 
@@ -166,17 +145,11 @@ export function DevAccess() {
               {busy ? "Verifying…" : "Verify & create account"}
             </Button>
             <div className="flex justify-between text-xs font-medium text-teal-700">
-              <button type="button" className="hover:underline" onClick={() => switchTo("signup")}>← Change details</button>
+              <button type="button" className="hover:underline" onClick={() => { setMode("signup"); setError(null); }}>← Change details</button>
               <button type="button" className="hover:underline disabled:opacity-50" disabled={busy} onClick={() => sendCode()}>Resend code</button>
             </div>
           </form>
         </>
-      )}
-
-      {mode !== "verify" && (signupOpen || mode === "signup") && (
-        <button type="button" className="mt-4 text-sm font-medium text-teal-700 hover:underline" onClick={() => switchTo(mode === "login" ? "signup" : "login")}>
-          {mode === "login" ? "No developer account? Sign up" : "Already have an account? Sign in"}
-        </button>
       )}
     </AuthCard>
   );

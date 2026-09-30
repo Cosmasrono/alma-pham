@@ -1,14 +1,13 @@
-// Developer access, used only by the unlinked /dev-access page.
+// Developer signup, used by /dev-access ("Are you a developer?" on the sign-in
+// page). Only one developer account may ever exist; after that, signup closes
+// and the developer signs in on the normal sign-in page.
 //   GET                                              → { signupOpen }
 //   POST { action: "signup", name, email, password } → emails a 6-digit code
 //   POST { action: "verify", email, code }           → creates the account, signs in
-//   POST { action: "login", email, password }        → signs in
-// The first signup (any email) becomes the developer; then signup closes except
-// for emails in DEVELOPER_EMAIL. Every session is view-only.
 import { NextResponse } from "next/server";
 import { signSession, SESSION_COOKIE, SESSION_MAX_AGE } from "@/lib/auth/jwt";
 import type { SessionUser } from "@/lib/auth/roles";
-import { developerAccountLogin, developerSignupOpen, startDeveloperSignup, verifyDeveloperSignup } from "@/lib/server/developer";
+import { developerSignupOpen, startDeveloperSignup, verifyDeveloperSignup } from "@/lib/server/developer";
 import { mailConfigured, sendAdminSignupCodeEmail } from "@/lib/server/mail";
 
 export const runtime = "nodejs";
@@ -40,12 +39,6 @@ export async function POST(req: Request) {
     const result = await verifyDeveloperSignup(body.email, body.code);
     if ("error" in result) return NextResponse.json(result, { status: 400 });
     return withSession(result.session);
-  }
-
-  if (body.action === "login") {
-    const session = await developerAccountLogin(body.email, body.password);
-    if (!session) return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
-    return withSession(session);
   }
 
   return NextResponse.json({ error: "Unknown action." }, { status: 400 });
