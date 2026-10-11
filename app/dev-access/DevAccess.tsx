@@ -84,8 +84,8 @@ export function DevAccess() {
 
       {mode === "closed" && (
         <>
-          <h1 className="mb-1 font-display text-xl font-semibold text-teal-950 dark:text-zinc-100">Page not available</h1>
-          <p className="mb-5 text-sm text-zinc-500 dark:text-zinc-400">Please use the sign-in page.</p>
+          <h1 className="mb-1 font-display text-xl font-semibold text-teal-950 dark:text-zinc-100">Developer signup unavailable</h1>
+          <p className="mb-5 text-sm text-zinc-500 dark:text-zinc-400">If you already have a developer account, sign in below. Otherwise, configure DEVELOPER_EMAIL on the server to enable registration.</p>
           <a href="/login" className="text-sm font-medium text-teal-700 hover:underline">Go to sign in</a>
         </>
       )}
@@ -94,7 +94,7 @@ export function DevAccess() {
         <>
           <h1 className="mb-1 font-display text-xl font-semibold text-teal-950 dark:text-zinc-100">Developer sign up</h1>
           <p className="mb-5 text-sm text-zinc-500 dark:text-zinc-400">
-            Only one developer account can exist. It sees everything but can&apos;t change clinic data.
+            Use the configured developer email. Only one developer account can exist. It sees everything but can&apos;t change clinic data.
             Afterwards, sign in on the normal sign-in page. We&apos;ll email you a code to confirm your address.
           </p>
           <form onSubmit={sendCode} className="flex flex-col gap-4">

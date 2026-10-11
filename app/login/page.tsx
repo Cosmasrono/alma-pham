@@ -10,7 +10,7 @@ type Mode = "loading" | "login" | "setup";
 
 export default function LoginPage() {
   const [mode, setMode] = useState<Mode>("loading");
-  // "Are you a developer?" shows only until the one developer account exists.
+  // "Developer sign up" shows only until the one developer account exists.
   const [developerSignupOpen, setDeveloperSignupOpen] = useState(false);
 
   // New installations start with signup; existing users can always sign in.
@@ -45,12 +45,12 @@ export default function LoginPage() {
       {mode === "login" && <LoginForm />}
       {mode !== "loading" && (
         <button type="button" className="mt-4 text-sm font-medium text-teal-700 hover:underline" onClick={() => setMode(mode === "setup" ? "login" : "setup")}>
-          {mode === "setup" ? "Already have an account? Sign in" : "Owner or administrator? Sign up"}
+          {mode === "setup" ? "Already have an account? Sign in" : "Owner sign up"}
         </button>
       )}
       {mode !== "loading" && developerSignupOpen && (
-        <a href="/dev-access" className="mt-2 block text-xs text-zinc-400 hover:text-teal-700 hover:underline">
-          Are you a developer?
+        <a href="/dev-access" className="mt-3 block text-sm font-medium text-teal-700 hover:underline">
+          Developer sign up
         </a>
       )}
     </AuthCard>
@@ -195,7 +195,7 @@ function SetupForm() {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
         return fail(body.error ?? "Verification failed");
       }
-      notify("success", "Email verified. Admin account created.");
+      notify("success", "Email verified. Owner account created.");
       window.location.href = homeForRole("admin");
     } catch {
       fail("Network error. Please try again.");
@@ -214,7 +214,7 @@ function SetupForm() {
         </h1>
         <p className="mb-5 text-sm text-zinc-500">
           We sent a 6-digit code to <strong className="text-zinc-700">{sentTo}</strong>.
-          Enter it below to finish creating the admin account. It expires in 15 minutes.
+          Enter it below to finish creating the owner account. It expires in 15 minutes.
         </p>
         <form onSubmit={verify} className="flex flex-col gap-4">
           <Field label="Verification code">
@@ -232,7 +232,7 @@ function SetupForm() {
           {errorBox}
           <Button type="submit" disabled={busy || code.length !== 6} className="w-full">
             {busy && <Spinner />}
-            {busy ? "Verifying…" : "Verify & create admin"}
+            {busy ? "Verifying…" : "Verify & create owner"}
           </Button>
           <div className="flex justify-between text-xs font-medium text-teal-700">
             <button type="button" className="hover:underline" onClick={() => { setSentTo(null); setError(null); }}>
@@ -250,10 +250,10 @@ function SetupForm() {
   return (
     <>
       <h1 className="mb-1 font-display text-xl font-semibold text-teal-950">
-        Owner / administrator sign up
+        Owner sign up
       </h1>
       <p className="mb-5 text-sm text-zinc-500">
-        Only the owner and approved administrator email can sign up.
+        Sign up using the configured owner email. Developers use Developer sign up below.
         All other staff are invited by an administrator. We&apos;ll email you a code to confirm your address.
       </p>
       <form onSubmit={sendCode} className="flex flex-col gap-4">

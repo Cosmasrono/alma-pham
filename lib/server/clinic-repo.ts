@@ -888,8 +888,8 @@ export async function userCount(): Promise<number> {
 
 // --- one-time admin sign-up ---------------------------------------------------
 //
-// Only the client's owner and admin emails configured in ClinicSettings may
-// sign up. Both use the admin role; other staff receive invitations.
+// Only the configured owner may sign up here, using the admin role.
+// The developer signs up separately; other staff receive invitations.
 
 const SIGNUP_CODE_TTL_MS = 15 * 60 * 1000;
 const SIGNUP_RESEND_MS = 60 * 1000;
@@ -917,7 +917,8 @@ export async function startAdminSignup(input: {
   if (!email || !validEmail(email)) {
     return { error: "A valid email address is required." };
   }
-  if (!(await signupAllowed(email))) return { error: "Signup is restricted to the owner and approved administrator. Ask your administrator for a staff invitation." };
+  if (!(await signupAllowed(email))) return { error: "Use the configured owner email to sign up. Developers must use Developer sign up; staff need an invitation." };
+  if (await isDeveloperEmail(email) || await isDeveloperEmail(username)) return { error: "This email or username is reserved for developer access." };
   if (await emailTaken(email)) return { error: "An account already exists for this email. Please sign in or reset your password." };
   if (await prisma.user.findUnique({ where: { username } })) return { error: "That username is already taken." };
 
@@ -947,7 +948,8 @@ export async function verifyAdminSignup(
   rawCode: string,
 ): Promise<{ error: string } | { user: StaffUser }> {
   const email = cleanEmail(rawEmail);
-  if (!email || !(await signupAllowed(email))) return { error: "Signup is restricted to the owner and approved administrator." };
+  if (!email || !(await signupAllowed(email))) return { error: "Signup is restricted to the configured owner email." };
+  if (await isDeveloperEmail(email)) return { error: "This email already belongs to the developer account. Please sign in." };
   const code = String(rawCode ?? "").trim();
   const pending = email
     ? await prisma.adminSignup.findUnique({ where: { email } })
@@ -1020,7 +1022,7 @@ export async function createUser(input: {
     return { error: "Username and name are required." };
   }
   if (input.role === "admin") {
-    return { error: "The owner and approved administrator must use email-verified signup." };
+    return { error: "The owner must use email-verified signup." };
   }
   if (!ROLES.includes(input.role) || input.role === "developer") return { error: "Choose a valid staff role." };
   const branch = await validBranchId(input.branchId);
@@ -1031,7 +1033,7 @@ export async function createUser(input: {
   const email = cleanEmail(input.email);
   if (!email || !validEmail(email)) return { error: "A valid email address is required to send the password setup link." };
   if (await isDeveloperEmail(email)) return { error: "This email is reserved for developer access." };
-  if (await signupAllowed(email)) return { error: "This email is reserved for owner or administrator signup." };
+  if (await signupAllowed(email)) return { error: "This email is reserved for owner signup." };
   if (await emailTaken(email)) return { error: "That email is already used by another account." };
 
   // This random password is never shared. Staff choose their own through email.

@@ -32,9 +32,8 @@ export async function developerLogin(identifier: string, password: string): Prom
 
 // --- the developer account ------------------------------------------------------
 //
-// Exactly one. The first person to sign up at /dev-access (linked from the
-// sign-in page as "Are you a developer?") becomes the developer, whatever
-// their email; the link and signup then close for good, and the developer
+// Exactly one, using the configured DEVELOPER_EMAIL at /dev-access.
+// The link and signup then close, and the developer
 // signs in on the normal sign-in page. The account lives apart from clinic
 // users, and every session is view-only.
 
@@ -49,12 +48,19 @@ function cleanEmail(raw: unknown): string {
 /** Is this the developer account's email? Clinic accounts can't use it. */
 export async function isDeveloperEmail(raw: unknown): Promise<boolean> {
   const email = cleanEmail(raw);
-  return Boolean(email && (await prisma.developerAccount.findUnique({ where: { email } })));
+  return Boolean(email && (email === cleanEmail(process.env.DEVELOPER_EMAIL) || (await prisma.developerAccount.findUnique({ where: { email } }))));
 }
 
 /** Developer signup is open only until the one developer account exists. */
 export async function developerSignupOpen(): Promise<boolean> {
-  return (await prisma.developerAccount.count()) === 0;
+  return Boolean(cleanEmail(process.env.DEVELOPER_EMAIL)) && (await prisma.developerAccount.count()) === 0;
+}
+
+async function developerSignupAllowed(email: string): Promise<boolean> {
+  if (!email || email !== cleanEmail(process.env.DEVELOPER_EMAIL)) return false;
+  const { signupEmails } = await import("@/lib/auth/owner");
+  if ((await signupEmails()).owner === email) return false;
+  return !(await prisma.user.findFirst({ where: { OR: [{ email }, { username: email }] } }));
 }
 
 function developerSession(email: string, name: string): SessionUser {
@@ -71,7 +77,9 @@ export async function startDeveloperSignup(input: {
   const email = cleanEmail(input.email);
   const password = String(input.password ?? "");
   if (!name || !email || !password) return { error: "Name, email and password are all required." };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "A valid email address is required." };
   if (password.length < 12) return { error: "Choose a password of at least 12 characters." };
+  if (!(await developerSignupAllowed(email))) return { error: "Use the configured developer email to sign up. The owner signs up on the sign-in page." };
   if (!(await developerSignupOpen())) return { error: "Developer signup is closed." };
   const recent = await prisma.developerSignup.findUnique({ where: { email } });
   if (recent && Date.now() - recent.createdAt.getTime() < RESEND_MS) {
@@ -98,6 +106,7 @@ export async function verifyDeveloperSignup(
 ): Promise<{ error: string } | { session: SessionUser }> {
   const email = cleanEmail(rawEmail);
   const code = String(rawCode ?? "").trim();
+  if (!(await developerSignupAllowed(email))) return { error: "Signup is restricted to the configured developer email." };
   if (!(await developerSignupOpen())) return { error: "Developer signup is closed." };
   const pending = await prisma.developerSignup.findUnique({ where: { email } });
   if (!pending) return { error: "No sign-up is waiting for that email. Please start again." };

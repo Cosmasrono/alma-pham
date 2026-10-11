@@ -18,24 +18,21 @@ Open [http://localhost:3001](http://localhost:3001) with your browser to see the
 
 ## Staff invitations
 
-Three kinds of account:
+Only two people can self-register:
 
-- **Developer (you, the vendor)** â€” exactly one account. While none exists,
-  the sign-in page shows **Are you a developer?**, which leads to a one-time
-  signup (any email, verified by code). Once the account exists that link
-  disappears and signup closes; the developer signs in on the normal sign-in
-  page. The account is stored apart from clinic users, so admins never see it.
-  Sees every page read-only and cannot change clinic data.
-- **Owner and administrator (the client)** â€” the only emails allowed to sign
-  up. Both get the admin role after verifying an emailed code. Only the owner
-  can delete accounts.
-- **Staff** â€” invited by an administrator from **Users**; they set their own
-  password from the emailed link.
+- **Owner** — use **Owner sign up** on `/login`, verify the emailed code,
+  then sign in using the chosen username or email. The owner has admin access.
+- **Developer** — use **Developer sign up** on `/login` (or `/dev-access`),
+  verify the emailed code, then sign in on `/login` using the developer email.
+  Only one developer account may register. Existing view-only access is preserved.
+- **Staff** — continue to use invitations from **Users**.
 
-When installing for a client, name their owner and administrator with:
-`pnpm exec tsx --env-file=.env scripts/configure-signup.ts --owner owner@client.com --admin admin@client.com`.
-Either flag may be omitted to leave that email unchanged. This does not change
-existing account passwords.
+Set `OWNER_EMAIL` and `DEVELOPER_EMAIL` in `.env` to two different email
+addresses and restart the server. Owner signup also supports the existing
+ClinicSettings.ownerEmail configured using
+`pnpm exec tsx --env-file=.env scripts/configure-signup.ts --owner owner@client.com`.
+`OWNER_EMAIL` takes precedence. The former administrator signup email no longer
+permits self-registration. Existing accounts and passwords remain unchanged.
 
 Set `APP_URL` to the public website address staff can open from their devices
 (for example, `https://clinic.example.com`). A localhost URL only works on the
